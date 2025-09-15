@@ -13,8 +13,12 @@
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
   .wrap{max-width:480px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
-  h1{font-size:20px;margin:6px 0 2px;text-align:center;color:#fcd34d}
 
+  /* Headings */
+  h1{font-size:20px;margin:6px 0 2px;text-align:center;color:#fcd34d}
+  .pageH{font-weight:900;margin-bottom:6px;color:#fcd34d;font-size:16px}
+
+  /* Cards & controls */
   .card{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:10px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
@@ -47,21 +51,20 @@
   .numbox::-webkit-outer-spin-button,.numbox::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   input.numbox{-moz-appearance:textfield}
 
-  .time{display:flex;align-items:center;gap:8px;justify-content:space-between}
   .tbig{font-variant-numeric:tabular-nums;font-weight:900;font-size:22px}
   .progress{height:10px;background:var(--bar);border-radius:999px;overflow:hidden;border:1px solid #334155}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .2s ease}
 
   .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
   .stat{background:#0b1223;border:1px solid var(--ring);border-radius:10px;padding:8px;text-align:center}
-  .lab{font-size:10px;color:var(--muted);letter-spacing:.3px}
+  .lab{font-size:10px;color:#9aa3b2;letter-spacing:.3px}
   .val{font-variant-numeric:tabular-nums;font-weight:900;font-size:18px}
 
   .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .key{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:12px 0;font-weight:900;font-size:18px}
+  .key{border:1px solid var(--ring);background:#0b1223;color:#e5e7eb;border-radius:12px;padding:12px 0;font-weight:900;font-size:18px}
   .key:active{transform:translateY(1px) scale(.99)}
 
-  .muted{color:var(--muted);font-size:12px}
+  .muted{color:#9aa3b2;font-size:12px}
   .good{color:#86efac}
   .bad{color:#fecaca}
 
@@ -79,16 +82,18 @@
   /* preview block */
   .pv{display:flex;flex-direction:column;align-items:center;gap:8px}
   .pv-block{background:#0b1223;border:1px dashed var(--ring);border-radius:10px;padding:8px 10px;width:100%;max-width:360px}
-  .pv-title{font-size:12px;color:var(--muted);text-align:center;margin-bottom:4px}
+  .pv-title{font-size:12px;color:#9aa3b2;text-align:center;margin-bottom:4px}
   .pv-line{font-weight:900;text-align:center}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Choose the fact families you want to practice</h1>
+  <!-- Big heading only on first page -->
+  <h1 id="mainTitle">Choose the fact families you want to practice</h1>
 
   <!-- STEP 1: Families -->
   <div id="step1" class="card">
+    <div class="pageH">Pick fact families</div>
     <div class="chips" id="modeChips" role="group" aria-label="Mode" style="margin-bottom:8px">
       <button class="chip active" data-mode="add">Add/Subtract</button>
       <button class="chip" data-mode="mul">Multiply/Divide</button>
@@ -107,7 +112,7 @@
 
   <!-- STEP 2: Duration -->
   <div id="step2" class="card" style="display:none">
-    <div class="muted" style="margin-bottom:6px">Choose round duration</div>
+    <div class="pageH">Choose round duration</div>
     <div class="chips" id="durChips" style="margin-bottom:8px">
       <button class="chip big" data-dur="10">10 s</button>
       <button class="chip big active" data-dur="30">30 s</button>
@@ -121,7 +126,7 @@
 
   <!-- STEP 3: Rounds -->
   <div id="step3" class="card" style="display:none">
-    <div class="muted" style="margin-bottom:6px">How many rounds?</div>
+    <div class="pageH">Choose number of rounds</div>
     <div class="chips" id="roundChips" style="margin-bottom:8px">
       <button class="chip big active" data-r="3">3</button>
       <button class="chip big" data-r="5">5</button>
@@ -132,11 +137,12 @@
       <button id="s3Back" class="btn">Back</button>
       <button id="s3Start" class="btn primary">Start</button>
     </div>
-    <div class="muted">Tip: You can adjust rounds later on the summary screen.</div>
+    <div class="muted">Tip: You’ll get a quick CPM after each round.</div>
   </div>
 
   <!-- PLAY -->
   <div id="play" class="card" style="display:none">
+    <div class="pageH">Practice</div>
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
       <div><b>Round</b> <span id="roundIdx">1</span>/<span id="roundTotal">1</span></div>
       <div class="tbig" id="timeLeft">00:30</div>
@@ -166,8 +172,9 @@
 
   <!-- SUMMARY -->
   <div id="summary" class="card" style="display:none">
+    <div class="pageH">Session summary</div>
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div style="font-weight:800">Summary</div>
+      <div style="font-weight:800">Results</div>
       <div class="muted"><span id="summaryRounds">0</span> rounds</div>
     </div>
     <table>
@@ -211,19 +218,24 @@ const F_MUL=[]; for(let a=1;a<=12;a++){ for(let b=a;b<=12;b++){ const c=a*b; F_M
 const MAP_ADD = new Map(F_ADD.map(f=>[f.id,f]));
 const MAP_MUL = new Map(F_MUL.map(f=>[f.id,f]));
 
-const famItemsAdd=f=>[
-  {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
-  {op:'+', pattern:[f.b,f.a,f.c], fam:f.id},
-  {op:'-', pattern:[f.c,f.a,f.b], fam:f.id},
-  {op:'-', pattern:[f.c,f.b,f.a], fam:f.id},
-];
-const famItemsMul=f=>[
-  {op:'×', pattern:[f.a,f.b,f.c], fam:f.id},
-  {op:'×', pattern:[f.b,f.a,f.c], fam:f.id},
-  {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
-  {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
-];
-const famLabel=id=>id.slice(2).split('-').join(' ');
+/* Four facts for preview */
+function previewLinesForFamily(f, mode){
+  if(mode==='add'){
+    return [
+      `${f.a}+${f.b}=${f.c}`,
+      `${f.b}+${f.a}=${f.c}`,
+      `${f.c}-${f.a}=${f.b}`,
+      `${f.c}-${f.b}=${f.a}`
+    ];
+  }else{
+    return [
+      `${f.a}×${f.b}=${f.c}`,
+      `${f.b}×${f.a}=${f.c}`,
+      `${f.c}÷${f.a}=${f.b}`,
+      `${f.c}÷${f.b}=${f.a}`
+    ];
+  }
+}
 
 /* ---------- State ---------- */
 let mode='add';
@@ -238,10 +250,12 @@ let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0;
 const ERROR_LIMIT=3;
 const results=[];
 
-/* ---------- Navigation ---------- */
+/* ---------- Navigation & headings ---------- */
 function show(id){
   ['step1','step2','step3','play','summary'].forEach(x=>$(x).style.display='none');
   $(id).style.display='';
+  // Big title only on first step
+  $('mainTitle').style.display = (id==='step1') ? '' : 'none';
 }
 function enableNextFamilies(){
   const count = (mode==='add'?selAdd:selMul).size;
@@ -326,23 +340,6 @@ function getChosenFamilies(){
   const sel  = mode==='add'?selAdd:selMul;
   return list.filter(f=>sel.has(f.id));
 }
-function previewLinesForFamily(f){
-  if(mode==='add'){
-    return [
-      `${f.a}+${f.b}=${f.c}`,
-      `${f.b}+${f.a}=${f.c}`,
-      `${f.c}-${f.a}=${f.b}`,
-      `${f.c}-${f.b}=${f.a}`
-    ];
-  }else{
-    return [
-      `${f.a}×${f.b}=${f.c}`,
-      `${f.b}×${f.a}=${f.c}`,
-      `${f.c}÷${f.a}=${f.b}`,
-      `${f.c}÷${f.b}=${f.a}`
-    ];
-  }
-}
 
 /* ---------- Play: engine ---------- */
 function inputHTML(){ return `<input id="ans" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
@@ -377,6 +374,18 @@ function mark(ok){
   inp.classList.remove('ok','err');
   inp.classList.add(ok?'ok':'err');
 }
+function famItemsAdd(f){ return [
+  {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
+  {op:'+', pattern:[f.b,f.a,f.c], fam:f.id},
+  {op:'-', pattern:[f.c,f.a,f.b], fam:f.id},
+  {op:'-', pattern:[f.c,f.b,f.a], fam:f.id},
+];}
+function famItemsMul(f){ return [
+  {op:'×', pattern:[f.a,f.b,f.c], fam:f.id},
+  {op:'×', pattern:[f.b,f.a,f.c], fam:f.id},
+  {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
+  {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
+];}
 function buildQueue(){
   const list = getChosenFamilies();
   const items=[];
@@ -408,16 +417,16 @@ function submit(){
   idx++; setTimeout(nextItem,70); hud();
 }
 
-/* ---------- Round setup & start (wait-for-tap) ---------- */
+/* ---------- Round setup & start ---------- */
 function renderPreviewBlocks(){
   const chosen = getChosenFamilies();
   if(!chosen.length){
     $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">No families selected</span>`;
     return;
   }
-  const toShow = chosen.length <= 3 ? chosen : [chosen[0]];
+  const toShow = chosen.length <= 3 ? chosen : [chosen[0]]; // up to 3 families
   const blocks = toShow.map(f=>{
-    const lines = previewLinesForFamily(f);
+    const lines = previewLinesForFamily(f, mode);
     return `<div class="pv-block">
               <div class="pv-title">Family: ${f.a} ${f.b} ${f.c}</div>
               ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
@@ -437,19 +446,26 @@ function startRoundSetup(){
   $('roundTotal').textContent = String(totalRounds);
   $('correct').textContent='0'; $('wrong').textContent='0';
   $('feedback').textContent='';
-  waitingTap = true;
+  $('timeBar').style.width='0%';
+  $('timeLeft').textContent = fmtTime(duration);
 
   q = buildQueue();
   if(q.length===0){ finishRound('empty'); return; }
 
-  $('timeBar').style.width='0%';
-  $('timeLeft').textContent = fmtTime(duration);
-
-  renderPreviewBlocks();
+  if(roundIdx === 0){
+    // First round: show preview and wait for tap
+    waitingTap = true;
+    renderPreviewBlocks();
+  }else{
+    // Subsequent rounds: start immediately (no preview)
+    waitingTap = false;
+    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Get ready…</span>`;
+    setTimeout(startTimedRound, 300);
+  }
 }
 
 function startTimedRound(){
-  if(!waitingTap) return;
+  if(roundIdx===0 && !waitingTap){ return; } // guard for accidental double-start on first round
   waitingTap = false;
   running=true; paused=false; correct=0; wrong=0; idx=0;
   startMs=Date.now(); pauseMs=0; pauseStart=0;
@@ -486,6 +502,7 @@ function showRoundPopup(n, cpm, c, w, endedByErrors){
 }
 
 /* ---------- Finish ---------- */
+function famLabel(id){ return id.slice(2).split('-').join(' '); }
 function finishRound(why){
   const wasRunning = running;
   running=false; if(tick) clearInterval(tick);
@@ -572,7 +589,6 @@ function renderSummary(){
       <td class="right">${r.cpm.toFixed(1)}</td>
     </tr>`).join('');
 }
-
 $('replaySame').addEventListener('click',()=>{
   roundIdx=0;
   results.length = 0;
