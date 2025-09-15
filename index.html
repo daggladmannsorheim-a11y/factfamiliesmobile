@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Fact Families — Mobile Wizard</title>
+<title>Fact Families — Practice</title>
 <style>
   :root{
     --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --muted:#9aa3b2; --ring:#334155;
@@ -70,19 +70,22 @@
   th{text-align:left;color:#cbd5e1;position:sticky;top:0;background:#0f172a}
   td.right{text-align:right}
 
-  #overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(2,6,23,.65);z-index:10;backdrop-filter:blur(2px)}
-  #overlay .count{font-size:56px;font-weight:900}
-
   /* quick round result popup */
   #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:20;background:rgba(0,0,0,.25)}
   #roundPopup .box{background:#0b1223;border:1px solid #334155;border-radius:14px;padding:14px 16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
   #roundPopup .title{font-weight:900;margin-bottom:4px}
   #roundPopup .line{font-variant-numeric:tabular-nums}
+
+  /* preview block */
+  .pv{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .pv-block{background:#0b1223;border:1px dashed var(--ring);border-radius:10px;padding:8px 10px;width:100%;max-width:360px}
+  .pv-title{font-size:12px;color:var(--muted);text-align:center;margin-bottom:4px}
+  .pv-line{font-weight:900;text-align:center}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Fact Families — Quick Wizard</h1>
+  <h1>Choose the fact families you want to practice</h1>
 
   <!-- STEP 1: Families -->
   <div id="step1" class="card">
@@ -142,7 +145,7 @@
 
     <div class="stage">
       <div id="eq" class="eq" aria-live="polite">
-        <span style="font-size:18px;opacity:.9">Ready — press Start</span>
+        <span style="font-size:18px;opacity:.9">Tap “Start” to preview</span>
       </div>
     </div>
 
@@ -179,9 +182,6 @@
     </div>
   </div>
 </div>
-
-<!-- Countdown -->
-<div id="overlay"><div class="count" id="count">3</div></div>
 
 <!-- Quick CPM popup -->
 <div id="roundPopup">
@@ -231,7 +231,7 @@ let selAdd=new Set(), selMul=new Set();
 let duration=30;
 let totalRounds=3, roundIdx=0;
 
-let running=false, paused=false;
+let running=false, paused=false, waitingTap=false;
 let startMs=0, pauseMs=0, pauseStart=0, tick=null;
 let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0;
 
@@ -317,8 +317,32 @@ $('s3Back').addEventListener('click',()=> show('step2'));
 $('s3Start').addEventListener('click',()=>{
   roundIdx = 0;
   show('play');
-  startRoundWithCountdown();
+  startRoundSetup();
 });
+
+/* ---------- Utilities ---------- */
+function getChosenFamilies(){
+  const list = mode==='add'?F_ADD:F_MUL;
+  const sel  = mode==='add'?selAdd:selMul;
+  return list.filter(f=>sel.has(f.id));
+}
+function previewLinesForFamily(f){
+  if(mode==='add'){
+    return [
+      `${f.a}+${f.b}=${f.c}`,
+      `${f.b}+${f.a}=${f.c}`,
+      `${f.c}-${f.a}=${f.b}`,
+      `${f.c}-${f.b}=${f.a}`
+    ];
+  }else{
+    return [
+      `${f.a}×${f.b}=${f.c}`,
+      `${f.b}×${f.a}=${f.c}`,
+      `${f.c}÷${f.a}=${f.b}`,
+      `${f.c}÷${f.b}=${f.a}`
+    ];
+  }
+}
 
 /* ---------- Play: engine ---------- */
 function inputHTML(){ return `<input id="ans" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
@@ -354,11 +378,9 @@ function mark(ok){
   inp.classList.add(ok?'ok':'err');
 }
 function buildQueue(){
-  const list = mode==='add'?F_ADD:F_MUL;
-  const sel  = mode==='add'?selAdd:selMul;
-  const chosen=list.filter(f=>sel.has(f.id));
+  const list = getChosenFamilies();
   const items=[];
-  chosen.forEach(f=>items.push(...(mode==='add'?famItemsAdd(f):famItemsMul(f))));
+  list.forEach(f=>items.push(...(mode==='add'?famItemsAdd(f):famItemsMul(f))));
   shuffle(items);
   return items;
 }
@@ -386,63 +408,49 @@ function submit(){
   idx++; setTimeout(nextItem,70); hud();
 }
 
-/* ---------- Preview of four facts BEFORE solving ---------- */
-function previewLinesForFamily(f){
-  if(mode==='add'){
-    return [
-      `${f.a}+${f.b}=${f.c}`,
-      `${f.b}+${f.a}=${f.c}`,
-      `${f.c}-${f.a}=${f.b}`,
-      `${f.c}-${f.b}=${f.a}`
-    ];
-  }else{
-    return [
-      `${f.a}×${f.b}=${f.c}`,
-      `${f.b}×${f.a}=${f.c}`,
-      `${f.c}÷${f.a}=${f.b}`,
-      `${f.c}÷${f.b}=${f.a}`
-    ];
+/* ---------- Round setup & start (wait-for-tap) ---------- */
+function renderPreviewBlocks(){
+  const chosen = getChosenFamilies();
+  if(!chosen.length){
+    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">No families selected</span>`;
+    return;
   }
-}
-function showFamilyPreviewForFirstItem(){
-  if(!q.length) return;
-  const famId = q[0].fam;
-  const f = (mode==='add' ? MAP_ADD.get(famId) : MAP_MUL.get(famId));
-  if(!f) return;
-  const lines = previewLinesForFamily(f);
-  $('eq').innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;align-items:center">
-      <div style="opacity:.8;font-size:14px">Preview</div>
-      <div style="font-weight:900">${lines[0]}</div>
-      <div style="font-weight:900">${lines[1]}</div>
-      <div style="font-weight:900">${lines[2]}</div>
-      <div style="font-weight:900">${lines[3]}</div>
+  const toShow = chosen.length <= 3 ? chosen : [chosen[0]];
+  const blocks = toShow.map(f=>{
+    const lines = previewLinesForFamily(f);
+    return `<div class="pv-block">
+              <div class="pv-title">Family: ${f.a} ${f.b} ${f.c}</div>
+              ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
+            </div>`;
+  }).join('');
+  $('eq').innerHTML = `<div class="pv">
+      ${blocks}
+      <button id="tapToStartBtn" class="btn primary big" style="margin-top:8px">Tap to begin</button>
     </div>`;
+  $('tapToStartBtn').addEventListener('click', startTimedRound, {once:true});
+  document.addEventListener('keydown', onEnterStart, {once:true});
 }
+function onEnterStart(e){ if(e.key==='Enter'){ e.preventDefault(); startTimedRound(); } }
 
-/* ---------- Round control ---------- */
-function startRoundWithCountdown(){
+function startRoundSetup(){
   $('roundIdx').textContent = String(roundIdx+1);
   $('roundTotal').textContent = String(totalRounds);
   $('correct').textContent='0'; $('wrong').textContent='0';
   $('feedback').textContent='';
+  waitingTap = true;
 
-  const ov=$('overlay'), c=$('count'); ov.style.display='grid'; let t=3; c.textContent=t;
-  const iv=setInterval(()=>{ t--; if(t>0){ c.textContent=t; } else { c.textContent='GO!'; setTimeout(()=>{ ov.style.display='none'; clearInterval(iv); beginRound(); },500);} },1000);
-}
-function beginRound(){
-  // Build queue first so we can preview the first family's four facts
   q = buildQueue();
   if(q.length===0){ finishRound('empty'); return; }
 
-  // Show preview (no timer running yet)
-  showFamilyPreviewForFirstItem();
   $('timeBar').style.width='0%';
   $('timeLeft').textContent = fmtTime(duration);
 
-  // After a short pause, start the actual timed round
-  setTimeout(startTimedRound, 1600); // quick preview window
+  renderPreviewBlocks();
 }
+
 function startTimedRound(){
+  if(!waitingTap) return;
+  waitingTap = false;
   running=true; paused=false; correct=0; wrong=0; idx=0;
   startMs=Date.now(); pauseMs=0; pauseStart=0;
   setEq(q[idx]); // first problem
@@ -454,6 +462,8 @@ function startTimedRound(){
     if(e>=duration){ finishRound('time'); }
   },100);
 }
+
+/* ---------- HUD ---------- */
 function elapsed(){ return ((paused?pauseStart:Date.now())-startMs - pauseMs)/1000; }
 function hud(){
   const e=elapsed();
@@ -475,18 +485,16 @@ function showRoundPopup(n, cpm, c, w, endedByErrors){
   setTimeout(()=>{ pop.style.display='none'; }, 1400);
 }
 
+/* ---------- Finish ---------- */
 function finishRound(why){
-  // Stop timing
   const wasRunning = running;
   running=false; if(tick) clearInterval(tick);
 
-  // Compute stats
   const e=elapsed();
   const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
   const fams=[...used].map(famLabel).join(' | ');
   const cpm = e>0? (correct/(e/60)) : 0;
 
-  // UI feedback line
   if(why==='errors'){
     $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}).</span>`;
   }else if(why==='empty'){
@@ -495,7 +503,6 @@ function finishRound(why){
     $('feedback').innerHTML = `<span class="good">Done — CPM ${cpm.toFixed(1)}</span>`;
   }
 
-  // Save result
   results.push({
     t: nowClock(),
     mode: mode==='add'?'A/S':'M/D',
@@ -506,14 +513,14 @@ function finishRound(why){
     why
   });
 
-  // QUICK POPUP
-  const displayRoundNumber = roundIdx + 1; // current (1-based)
+  // popup
+  const displayRoundNumber = roundIdx + 1;
   showRoundPopup(displayRoundNumber, cpm, correct, wrong, why==='errors');
 
-  // Advance or summary
+  // next or summary
   roundIdx++;
   if(roundIdx < totalRounds){
-    setTimeout(startRoundWithCountdown, 900);
+    setTimeout(startRoundSetup, 900);
   }else{
     setTimeout(()=>{ renderSummary(); show('summary'); }, 700);
   }
@@ -567,11 +574,10 @@ function renderSummary(){
 }
 
 $('replaySame').addEventListener('click',()=>{
-  // keep same families/mode/duration/rounds
   roundIdx=0;
-  results.length = 0; // clear summary for the new session
+  results.length = 0;
   show('play');
-  startRoundWithCountdown();
+  startRoundSetup();
 });
 $('newSetup').addEventListener('click',()=>{
   results.length = 0;
