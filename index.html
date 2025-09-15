@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Fact Families — Practice</title>
+<title>Adaptiv (Flyt) — Fact Families</title>
 <style>
   :root{
     --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --muted:#9aa3b2; --ring:#334155;
@@ -29,25 +29,20 @@
         border-radius:999px;padding:10px 12px;font-weight:800}
   .chip.active{border-color:var(--ok);box-shadow:0 0 0 2px #14532d inset}
   .chip.big{font-size:16px}
+  .chip.small{padding:6px 10px;font-size:12px}
 
-  .btn{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:800}
+  .btn{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
   .btn.primary{border-color:var(--ok)}
   .btn.warn{border-color:var(--warn)}
   .btn.stop{border-color:var(--err)}
   .btn.big{width:100%;padding:12px;font-size:18px}
-
-  .families{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .fam{display:flex;align-items:center;gap:6px;border:1px solid var(--ring);background:#0b1223;border-radius:10px;padding:8px}
-  .fam input{accent-color:#22c55e}
-  .fam span{font-weight:800}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
 
   .stage{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--ring);border-radius:12px;padding:16px;background:radial-gradient(600px 200px at 50% -40%, #22c55e12, transparent 60%)}
   .eq{display:flex;align-items:center;justify-content:center;gap:10px;font-size:clamp(28px,8vw,40px);user-select:none}
   .numbox{width:5.2ch;height:2.2em;border-radius:12px;border:3px solid #374151;background:#0b1223;color:var(--ink);font-weight:900;text-align:center;font-size:1em}
-  .numbox.ok{border-color:var(--ok);background:#052e15;color:#c7f9d4}
-  .numbox.err{border-color:var(--err);background:#3b0a0a;color:#fecaca}
+  .numbox.ok{border-color:#22c55e;background:#052e15;color:#c7f9d4}
+  .numbox.err{border-color:#ef4444;background:#3b0a0a;color:#fecaca}
   .numbox::-webkit-outer-spin-button,.numbox::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   input.numbox{-moz-appearance:textfield}
 
@@ -73,6 +68,9 @@
   th{text-align:left;color:#cbd5e1;position:sticky;top:0;background:#0f172a}
   td.right{text-align:right}
 
+  .levelChip{border:1px solid #334155;background:#0b1223;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900}
+  .hintbox{border:1px dashed #334155;border-radius:10px;padding:8px;background:#0b1223;font-size:12px;color:#cbd5e1}
+
   /* ⚡ BIG round result flash */
   #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:30;pointer-events:none}
   #roundPopup .flash{
@@ -94,7 +92,7 @@
     100%{transform:scale(1);opacity:1}
   }
 
-  /* preview block */
+  /* preview block (første runde på nytt nivå) */
   .pv{display:flex;flex-direction:column;align-items:center;gap:8px}
   .pv-block{background:#0b1223;border:1px dashed var(--ring);border-radius:10px;padding:8px 10px;width:100%;max-width:360px}
   .pv-title{font-size:12px;color:#9aa3b2;text-align:center;margin-bottom:4px}
@@ -103,104 +101,107 @@
 </head>
 <body>
 <div class="wrap">
-  <!-- Big heading only on first page -->
-  <h1 id="mainTitle">Choose the fact families you want to practice</h1>
+  <h1 id="mainTitle">Adaptiv (Flyt) — husk nivået ditt!</h1>
 
-  <!-- STEP 1: Families -->
-  <div id="step1" class="card">
-    <div class="pageH">Pick fact families</div>
-    <div class="chips" id="modeChips" role="group" aria-label="Mode" style="margin-bottom:8px">
-      <button class="chip active" data-mode="add">Add/Subtract</button>
-      <button class="chip" data-mode="mul">Multiply/Divide</button>
-      <span class="spacer"></span>
-      <span class="muted">Selected: <b id="selCount">0</b></span>
+  <!-- HOME -->
+  <div id="home" class="card">
+    <div class="pageH">Start</div>
+    <div class="hintbox" style="margin-bottom:8px">
+      Nivåkoder: <b>A5–A20</b> (summer) og <b>M2–M12</b> (gangetabeller).<br>
+      Tips: <i>Husk nivået ditt</i> (f.eks. <b>A7</b> eller <b>M5</b>) for rask start på en ny enhet.
     </div>
+
+    <div class="chips" id="domainChips" style="margin-bottom:8px">
+      <button class="chip active" data-domain="add">Pluss/Minus (A5–A20)</button>
+      <button class="chip" data-domain="mul">Gange/Deling (M2–M12)</button>
+    </div>
+
     <div class="grid2" style="margin-bottom:8px">
-      <button id="selAll" class="btn">Select all</button>
-      <button id="selNone" class="btn">Clear</button>
+      <button id="btnContinue" class="btn" disabled>Fortsett nivå</button>
+      <button id="btnPlacement" class="btn primary">Start placement test</button>
     </div>
-    <div id="famGrid" class="families" aria-live="polite" style="margin-bottom:8px"></div>
-    <div class="grid2">
-      <button id="s1Next" class="btn primary big" disabled>Next</button>
+
+    <div class="row" style="gap:8px">
+      <input id="levelInput" type="text" placeholder="Skriv nivå (A7 eller M5)" 
+             style="flex:1;background:#0b1223;color:#e5e7eb;border:1px solid #334155;border-radius:10px;padding:10px 12px;font-weight:800">
+      <button id="btnJump" class="btn">Gå</button>
+    </div>
+
+    <div class="muted" id="lastInfo" style="margin-top:8px"></div>
+  </div>
+
+  <!-- PLACEMENT -->
+  <div id="placement" class="card" style="display:none">
+    <div class="pageH">Placement test</div>
+    <div class="muted" id="plNote" style="margin-bottom:6px">Runde <b id="plIdx">1</b>/4 – 20 sek</div>
+
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <div class="levelChip" id="plGroupName">—</div>
+      <div class="tbig" id="plTime">00:20</div>
+    </div>
+    <div class="progress" style="margin-bottom:8px"><div id="plBar" class="bar"></div></div>
+
+    <div class="stage">
+      <div id="plEq" class="eq">Klar?</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="lab">Riktige</div><div id="plOK" class="val">0</div></div>
+      <div class="stat"><div class="lab">Feil</div><div id="plBad" class="val">0</div></div>
+    </div>
+
+    <div class="keypad" id="plPad" style="margin-top:8px"></div>
+
+    <div class="grid2" style="margin-top:8px">
+      <button id="plPause" class="btn warn">Pause</button>
+      <button id="plAbort" class="btn stop">Avbryt</button>
     </div>
   </div>
 
-  <!-- STEP 2: Duration -->
-  <div id="step2" class="card" style="display:none">
-    <div class="pageH">Choose round duration</div>
-    <div class="chips" id="durChips" style="margin-bottom:8px">
-      <button class="chip big" data-dur="10">10 s</button>
-      <button class="chip big active" data-dur="30">30 s</button>
-      <button class="chip big" data-dur="60">60 s</button>
-    </div>
-    <div class="grid2">
-      <button id="s2Back" class="btn">Back</button>
-      <button id="s2Next" class="btn primary">Next</button>
-    </div>
-  </div>
-
-  <!-- STEP 3: Rounds -->
-  <div id="step3" class="card" style="display:none">
-    <div class="pageH">Choose number of rounds</div>
-    <div class="chips" id="roundChips" style="margin-bottom:8px">
-      <button class="chip big active" data-r="3">3</button>
-      <button class="chip big" data-r="5">5</button>
-      <button class="chip big" data-r="10">10</button>
-      <button class="chip big" data-r="1">1</button>
-    </div>
-    <div class="grid2" style="margin-bottom:8px">
-      <button id="s3Back" class="btn">Back</button>
-      <button id="s3Start" class="btn primary">Start</button>
-    </div>
-    <div class="muted">You’ll see a ⚡ CPM flash after every round.</div>
-  </div>
-
-  <!-- PLAY -->
+  <!-- PLAY (FLOW) -->
   <div id="play" class="card" style="display:none">
     <div class="pageH">Practice</div>
+
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div><b>Round</b> <span id="roundIdx">1</span>/<span id="roundTotal">1</span></div>
+      <div class="row" style="gap:6px;align-items:center">
+        <span class="levelChip">Nivå <b id="levelCode">A7</b></span>
+        <span class="muted" id="mixTag" style="display:none">Miksrunde</span>
+      </div>
       <div class="tbig" id="timeLeft">00:30</div>
     </div>
     <div class="progress" style="margin-bottom:8px"><div id="timeBar" class="bar"></div></div>
 
     <div class="stage">
-      <div id="eq" class="eq" aria-live="polite">
-        <span style="font-size:18px;opacity:.9">Tap “Start” to preview</span>
-      </div>
+      <div id="eq" class="eq">Tap for å starte</div>
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="lab">Correct</div><div id="correct" class="val">0</div></div>
-      <div class="stat"><div class="lab">Errors</div><div id="wrong" class="val">0</div></div>
+      <div class="stat"><div class="lab">Riktige</div><div id="correct" class="val">0</div></div>
+      <div class="stat"><div class="lab">Feil</div><div id="wrong" class="val">0</div></div>
     </div>
 
     <div class="keypad" id="keypad" style="margin-top:8px"></div>
 
     <div class="grid2" style="margin-top:8px">
       <button id="pauseBtn" class="btn warn">Pause</button>
-      <button id="stopBtn" class="btn stop">Stop</button>
+      <button id="stopBtn" class="btn stop">Stopp</button>
     </div>
 
-    <div id="feedback" class="muted" style="text-align:center;margin-top:6px"></div>
+    <div class="muted" id="flowHint" style="margin-top:6px"></div>
   </div>
 
   <!-- SUMMARY -->
   <div id="summary" class="card" style="display:none">
-    <div class="pageH">Session summary</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div style="font-weight:800">Results</div>
-      <div class="muted"><span id="summaryRounds">0</span> rounds</div>
-    </div>
+    <div class="pageH">Øktsammendrag</div>
     <table>
       <thead>
-        <tr><th>Time</th><th>Mode</th><th>Fams</th><th class="right">✓</th><th class="right">✗</th><th class="right">s</th><th class="right">CPM</th></tr>
+      <tr><th>Tid</th><th>Nivå</th><th>✓</th><th>✗</th><th class="right">s</th><th class="right">CPM</th><th>Flyt</th></tr>
       </thead>
       <tbody id="resBody"></tbody>
     </table>
     <div class="grid2" style="margin-top:8px">
-      <button id="replaySame" class="btn primary">Replay same</button>
-      <button id="newSetup" class="btn">New setup</button>
+      <button id="sumContinue" class="btn primary">Fortsett</button>
+      <button id="sumHome" class="btn">Hjem</button>
     </div>
   </div>
 </div>
@@ -218,7 +219,7 @@
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-const fmtTime = s => { if(s===null) return '—'; s=Math.max(0,Math.ceil(s)); return `${pad(Math.floor(s/60))}:${pad(s%60)}`; };
+const fmtTime = s => { s=Math.max(0,Math.ceil(s)); return `${pad(Math.floor(s/60))}:${pad(s%60)}`; };
 const nowClock = ()=>{ const d=new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
 
 /* ---------- Families ---------- */
@@ -227,133 +228,255 @@ const F_ADD=[]; for(let c=2;c<=20;c++){ for(let a=1;a<=Math.floor(c/2);a++){ con
 // Mul: a<=b<=12
 const F_MUL=[]; for(let a=1;a<=12;a++){ for(let b=a;b<=12;b++){ const c=a*b; F_MUL.push({a,b,c,id:`M:${a}-${b}-${c}`}); } }
 
-const MAP_ADD = new Map(F_ADD.map(f=>[f.id,f]));
-const MAP_MUL = new Map(F_MUL.map(f=>[f.id,f]));
+const famItemsAdd=f=>[
+  {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
+  {op:'+', pattern:[f.b,f.a,f.c], fam:f.id},
+  {op:'-', pattern:[f.c,f.a,f.b], fam:f.id},
+  {op:'-', pattern:[f.c,f.b,f.a], fam:f.id},
+];
+const famItemsMul=f=>[
+  {op:'×', pattern:[f.a,f.b,f.c], fam:f.id},
+  {op:'×', pattern:[f.b,f.a,f.c], fam:f.id},
+  {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
+  {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
+];
 
-/* Four facts for preview */
-function previewLinesForFamily(f, mode){
-  if(mode==='add'){
-    return [
-      `${f.a}+${f.b}=${f.c}`,
-      `${f.b}+${f.a}=${f.c}`,
-      `${f.c}-${f.a}=${f.b}`,
-      `${f.c}-${f.b}=${f.a}`
-    ];
+/* ---------- Flow state (persist) ---------- */
+const KEY='ff_v2_flow_progress_v1';
+let flow = {
+  domain:'add',            // 'add' | 'mul'
+  placementDone:false,
+  currentLevel:null,       // 'A7' or 'M5'
+  streak:0,                // consecutive flyt passes on currentLevel
+  mastered:[],             // ['A6','A7',...]
+  mixWith:null,            // previous mastered to mix with
+  mixPending:false,        // schedule a mix round after mastering second family
+  lastCpm:0,
+};
+function loadFlow(){
+  try{ const raw=localStorage.getItem(KEY); if(raw){ flow = Object.assign(flow, JSON.parse(raw)); } }catch(e){}
+}
+function saveFlow(){ try{ localStorage.setItem(KEY, JSON.stringify(flow)); }catch(e){} }
+
+/* ---------- Screens ---------- */
+function show(id){
+  ['home','placement','play','summary'].forEach(x=>$(x).style.display='none');
+  $(id).style.display='';
+  $('mainTitle').style.display = (id==='home') ? '' : 'none';
+}
+
+/* ---------- Domain chips ---------- */
+$('domainChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('domainChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const d=b.dataset.domain;
+  flow.domain=d; saveFlow();
+  updateHomeButtons();
+});
+
+/* ---------- Home: Continue / Jump ---------- */
+function updateHomeButtons(){
+  const has = flow.currentLevel && flow.currentLevel.startsWith(flow.domain==='add'?'A':'M');
+  $('btnContinue').disabled = !has;
+  $('lastInfo').textContent = has ? `Sist lagret nivå: ${flow.currentLevel}` : '';
+  $('levelInput').placeholder = flow.domain==='add' ? 'Skriv nivå (A7…A20)' : 'Skriv nivå (M2…M12)';
+}
+$('btnContinue').addEventListener('click',()=>{
+  if(!flow.currentLevel) return;
+  startLevel(flow.currentLevel, /*preview=*/true);
+});
+$('btnJump').addEventListener('click',()=>{
+  const code = ($('levelInput').value||'').trim().toUpperCase();
+  if(!validateLevelCode(code)){ alert('Ugyldig nivå. Bruk A5–A20 eller M2–M12.'); return; }
+  flow.currentLevel = code;
+  flow.domain = code.startsWith('A') ? 'add':'mul';
+  flow.placementDone = true;
+  flow.streak = 0; flow.mixWith=null; flow.mixPending=false;
+  saveFlow();
+  startLevel(flow.currentLevel, /*preview=*/true);
+});
+
+/* ---------- Level code helpers ---------- */
+function validateLevelCode(code){
+  if(/^A(1?\d|20)$/.test(code)){ const n=+code.slice(1); return n>=5 && n<=20; }
+  if(/^M(1?\d|12)$/.test(code)){ const n=+code.slice(1); return n>=2 && n<=12; }
+  return false;
+}
+function levelNumber(code){ return +code.slice(1); }
+
+/* ---------- Placement test ---------- */
+const PL_GROUPS_ADD = [
+  {label:'Summer 2–6', sums:[2,3,4,5,6]},
+  {label:'Summer 7–10', sums:[7,8,9,10]},
+  {label:'Summer 11–15', sums:[11,12,13,14,15]},
+  {label:'Summer 16–20', sums:[16,17,18,19,20]},
+];
+const PL_GROUPS_MUL = [
+  {label:'2–4-gangen',   factors:[2,3,4]},
+  {label:'5–7-gangen',   factors:[5,6,7]},
+  {label:'8–9-gangen',   factors:[8,9]},
+  {label:'10–12-gangen', factors:[10,11,12]},
+];
+
+let plIdx=0, plDur=20, plRunning=false, plPaused=false, plStart=0, plPauseMs=0, plTick=null;
+let plCorrect=0, plWrong=0, plQ=[], plI=0, plSol=0, plCur=null;
+let plStats={}; // per sum or table: {ok, bad, time}
+
+/* Build placement queue for a group */
+function buildPlacementQueue(){
+  const list = (flow.domain==='add') ? F_ADD : F_MUL;
+  const g = (flow.domain==='add') ? PL_GROUPS_ADD[plIdx] : PL_GROUPS_MUL[plIdx];
+  const chosenFamilies = (flow.domain==='add')
+    ? list.filter(f=>g.sums.includes(f.c)) // all families whose sum c is in group
+    : list.filter(f=>g.factors.includes(f.a) || g.factors.includes(f.b)); // families belonging to chosen tables
+  const items=[];
+  (flow.domain==='add'?chosenFamilies:chosenFamilies).forEach(f=>{
+    items.push(...(flow.domain==='add'?famItemsAdd(f):famItemsMul(f)));
+  });
+  shuffle(items);
+  // Limit queue to keep round varied but finite
+  return items.slice(0,200);
+}
+
+/* Placement round engine */
+function plInputHTML(){ return `<input id="plAns" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
+function plSetEq(item){
+  plCur=item;
+  const [x,y,z]=item.pattern, op=item.op;
+  const miss=Math.floor(Math.random()*3);
+  $('plEq').innerHTML = [
+    miss===0?plInputHTML():`<span>${x}</span>`,
+    `<span>${op}</span>`,
+    miss===1?plInputHTML():`<span>${y}</span>`,
+    `<span>=</span>`,
+    miss===2?plInputHTML():`<span>${z}</span>`
+  ].join('');
+  plSol=[x,y,z][miss];
+
+  const inp=$('plAns'); if(inp){
+    const blockKeys = e => { if(['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault(); };
+    const blockWheel = e => e.preventDefault();
+    inp.addEventListener('keydown', blockKeys, {passive:false});
+    inp.addEventListener('wheel', blockWheel, {passive:false});
+    inp.addEventListener('input', ()=>{
+      inp.value = inp.value.replace(/\D+/g,'').slice(0,3);
+      plOnType();
+    });
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); plSubmit(); } });
+    inp.focus({preventScroll:true});
+  }
+}
+function plOnType(){
+  if(!plRunning || plPaused) return;
+  const inp=$('plAns'); if(!inp) return;
+  const v=inp.value.trim(); if(v==='') return;
+  const need=String(plSol).length;
+  if(v.length>=need || +v===plSol){ plSubmit(); }
+}
+function plSubmit(){
+  if(!plRunning||plPaused) return;
+  const v=$('plAns')?.value?.trim(); if(v==='') return;
+  const ok=(+v===plSol); const key = (flow.domain==='add') ? String(plCur.pattern[2]) : (plCur.pattern[0]===plCur.pattern[1] ? plCur.pattern[0] : (plCur.pattern[0] < plCur.pattern[1] ? plCur.pattern[0] : plCur.pattern[1]));
+  if(ok){ plCorrect++; $('plOK').textContent=String(plCorrect); }
+  else{ plWrong++; $('plBad').textContent=String(plWrong); }
+  // accumulate per-sum or per-table stats
+  if(!plStats[key]) plStats[key]={ok:0,bad:0};
+  if(ok) plStats[key].ok++; else plStats[key].bad++;
+
+  plI++;
+  if(plI>=plQ.length){ plQ = plQ.concat(buildPlacementQueue()); }
+  plSetEq(plQ[plI]);
+}
+function startPlacementRound(){
+  plCorrect=0; plWrong=0; $('plOK').textContent='0'; $('plBad').textContent='0';
+  $('plIdx').textContent=String(plIdx+1);
+  const group = (flow.domain==='add') ? PL_GROUPS_ADD[plIdx] : PL_GROUPS_MUL[plIdx];
+  $('plGroupName').textContent = group.label;
+  $('plTime').textContent = fmtTime(plDur);
+  $('plBar').style.width='0%';
+  plQ = buildPlacementQueue(); plI=0; plSetEq(plQ[plI]);
+
+  plRunning=true; plPaused=false; plStart=Date.now(); plPauseMs=0;
+  if(plTick) clearInterval(plTick);
+  plTick=setInterval(()=>{
+    if(!plRunning||plPaused) return;
+    const e=((Date.now()-plStart)-plPauseMs)/1000;
+    const left=Math.max(0, plDur-e);
+    $('plTime').textContent=fmtTime(left);
+    $('plBar').style.width = Math.min(100, (e/plDur)*100) + '%';
+    if(e>=plDur){ finishPlacementRound(); }
+  },100);
+}
+function finishPlacementRound(){
+  plRunning=false; if(plTick) clearInterval(plTick);
+  // proceed to next group
+  plIdx++;
+  if(plIdx<4){
+    startPlacementRound();
   }else{
-    return [
-      `${f.a}×${f.b}=${f.c}`,
-      `${f.b}×${f.a}=${f.c}`,
-      `${f.c}÷${f.a}=${f.b}`,
-      `${f.c}÷${f.b}=${f.a}`
-    ];
+    // decide start level
+    const startCode = decideStartLevelFromPlacement();
+    flow.currentLevel = startCode;
+    flow.placementDone = true;
+    flow.streak = 0; flow.mixWith=null; flow.mixPending=false;
+    saveFlow();
+    startLevel(startCode, /*preview=*/true);
+    // reset placement state
+    plIdx=0; plStats={};
+  }
+}
+$('plPause').addEventListener('click',()=>{
+  if(!plRunning) return;
+  plPaused = !plPaused;
+  if(!plPaused){ plPauseMs += Date.now() - (plStart + plPauseMs + (plDur*1000 - (plDur*1000 - 0))); } // keep simple
+});
+$('plAbort').addEventListener('click',()=>{ plRunning=false; if(plTick) clearInterval(plTick); show('home'); });
+
+/* Decide start level from plStats */
+function decideStartLevelFromPlacement(){
+  // Build score per key
+  // For add: key = sum c; For mul: key = factor table (use factor itself)
+  const entries = Object.entries(plStats).map(([k,v])=>{
+    const ok=v.ok||0, bad=v.bad||0;
+    const attempts=ok+bad;
+    const cpm = attempts * (60/plDur); // approx since all within 20s
+    const score = cpm - 5*bad; // simple
+    return {key:+k, ok, bad, attempts, cpm, score};
+  });
+  if(entries.length===0){
+    // fallback
+    return flow.domain==='add' ? 'A7' : 'M5';
+    }
+  // Prefer keys with <=1 feil, choose highest cpm; else best score
+  let candidates = entries.filter(e=>e.bad<=1);
+  if(candidates.length===0) candidates = entries;
+  candidates.sort((a,b)=> b.cpm - a.cpm || b.score - a.score);
+
+  const best = candidates[0];
+  if(flow.domain==='add'){
+    let c = best.key;
+    // if this was very lett (proxy): bump ett trinn
+    if(best.cpm >= 28 && best.bad===0) c = Math.min(20, c+1);
+    c = Math.max(5, Math.min(20, c));
+    return 'A'+c;
+  }else{
+    let t = best.key;
+    if(best.cpm >= 20 && best.bad===0) t = Math.min(12, t+1);
+    t = Math.max(2, Math.min(12, t));
+    return 'M'+t;
   }
 }
 
-/* ---------- State ---------- */
-let mode='add';
-let selAdd=new Set(), selMul=new Set();
-let duration=30;
-let totalRounds=3, roundIdx=0;
+/* ---------- Flow play engine ---------- */
+const ROUND_SEC = 30;
+const ERROR_LIMIT = 3;
 
 let running=false, paused=false, waitingTap=false;
 let startMs=0, pauseMs=0, pauseStart=0, tick=null;
 let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0;
+let results=[]; // for session table
 
-const ERROR_LIMIT=3;
-const results=[];
-
-/* ---------- Navigation & headings ---------- */
-function show(id){
-  ['step1','step2','step3','play','summary'].forEach(x=>$(x).style.display='none');
-  $(id).style.display='';
-  // Big title only on first step
-  $('mainTitle').style.display = (id==='step1') ? '' : 'none';
-}
-function enableNextFamilies(){
-  const count = (mode==='add'?selAdd:selMul).size;
-  $('selCount').textContent = count;
-  $('s1Next').disabled = count===0;
-}
-
-/* ---------- Step 1: Families ---------- */
-function renderFamilies(){
-  const grid=$('famGrid'); grid.innerHTML='';
-  const list = mode==='add'?F_ADD:F_MUL;
-  const sel  = mode==='add'?selAdd:selMul;
-
-  const frag=document.createDocumentFragment();
-  list.forEach(f=>{
-    const lab=document.createElement('label');
-    lab.className='fam';
-    lab.innerHTML = `<input type="checkbox" data-id="${f.id}" ${sel.has(f.id)?'checked':''}><span>${f.a} ${f.b} ${f.c}</span>`;
-    frag.appendChild(lab);
-  });
-  grid.appendChild(frag);
-
-  grid.onchange = (e)=>{
-    const cb=e.target && e.target.matches && e.target.matches('input[type=checkbox]') ? e.target : null;
-    if(!cb) return;
-    const set = mode==='add'?selAdd:selMul;
-    if(cb.checked) set.add(cb.dataset.id); else set.delete(cb.dataset.id);
-    enableNextFamilies();
-  };
-
-  enableNextFamilies();
-}
-
-$('modeChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('modeChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  mode = b.dataset.mode;
-  renderFamilies();
-});
-
-$('selAll').addEventListener('click',()=>{
-  const set = mode==='add'?selAdd:selMul;
-  set.clear();
-  (mode==='add'?F_ADD:F_MUL).forEach(f=>set.add(f.id));
-  renderFamilies();
-});
-$('selNone').addEventListener('click',()=>{
-  const set = mode==='add'?selAdd:selMul;
-  set.clear();
-  renderFamilies();
-});
-$('s1Next').addEventListener('click',()=> show('step2'));
-
-/* ---------- Step 2: Duration ---------- */
-$('durChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('durChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  duration = Number(b.dataset.dur);
-});
-$('s2Back').addEventListener('click',()=> show('step1'));
-$('s2Next').addEventListener('click',()=> show('step3'));
-
-/* ---------- Step 3: Rounds ---------- */
-$('roundChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('roundChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  totalRounds = Number(b.dataset.r);
-});
-$('s3Back').addEventListener('click',()=> show('step2'));
-$('s3Start').addEventListener('click',()=>{
-  roundIdx = 0;
-  show('play');
-  startRoundSetup();
-});
-
-/* ---------- Utilities ---------- */
-function getChosenFamilies(){
-  const list = mode==='add'?F_ADD:F_MUL;
-  const sel  = mode==='add'?selAdd:selMul;
-  return list.filter(f=>sel.has(f.id));
-}
-
-/* ---------- Play: engine ---------- */
 function inputHTML(){ return `<input id="ans" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
 function setEq(item){
   cur=item;
@@ -386,27 +509,43 @@ function mark(ok){
   inp.classList.remove('ok','err');
   inp.classList.add(ok?'ok':'err');
 }
-function famItemsAdd(f){ return [
-  {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
-  {op:'+', pattern:[f.b,f.a,f.c], fam:f.id},
-  {op:'-', pattern:[f.c,f.a,f.b], fam:f.id},
-  {op:'-', pattern:[f.c,f.b,f.a], fam:f.id},
-];}
-function famItemsMul(f){ return [
-  {op:'×', pattern:[f.a,f.b,f.c], fam:f.id},
-  {op:'×', pattern:[f.b,f.a,f.c], fam:f.id},
-  {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
-  {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
-];}
-function buildQueue(){
-  const list = getChosenFamilies();
+
+function buildQueueForLevel(code, mixWith=null){
   const items=[];
-  list.forEach(f=>items.push(...(mode==='add'?famItemsAdd(f):famItemsMul(f))));
-  shuffle(items);
-  return items;
+  if(code.startsWith('A')){
+    const c=+code.slice(1);
+    const fams = F_ADD.filter(f=>f.c===c);
+    fams.forEach(f=> items.push(...famItemsAdd(f)));
+    if(mixWith){
+      const cm=+mixWith.slice(1);
+      const fams2=F_ADD.filter(f=>f.c===cm);
+      const items2=[]; fams2.forEach(f=> items2.push(...famItemsAdd(f)));
+      // 50/50 miks
+      const blend=[]; const a=items.length, b=items2.length;
+      const L=Math.max(a,b);
+      for(let i=0;i<L;i++){ if(i<a) blend.push(items[i]); if(i<b) blend.push(items2[i]); }
+      return shuffle(blend);
+    }
+    return shuffle(items);
+  }else{
+    const t=+code.slice(1);
+    const fams = F_MUL.filter(f=>f.a===t || f.b===t);
+    fams.forEach(f=> items.push(...famItemsMul(f)));
+    if(mixWith){
+      const tm=+mixWith.slice(1);
+      const fams2=F_MUL.filter(f=>f.a===tm || f.b===tm);
+      const items2=[]; fams2.forEach(f=> items2.push(...famItemsMul(f)));
+      const blend=[]; const a=items.length, b=items2.length;
+      const L=Math.max(a,b);
+      for(let i=0;i<L;i++){ if(i<a) blend.push(items[i]); if(i<b) blend.push(items2[i]); }
+      return shuffle(blend);
+    }
+    return shuffle(items);
+  }
 }
+
 function nextItem(){
-  if(idx>=q.length){ q=q.concat(buildQueue()); if(q.length===0){ finishRound('empty'); return; } }
+  if(idx>=q.length){ q=q.concat(q); } // keep replenishing with same composition
   setEq(q[idx]); hud();
 }
 function onType(){
@@ -420,214 +559,231 @@ function submit(){
   if(!running||paused) return;
   const v=$('ans')?.value?.trim(); if(v==='') return;
   const ok=(+v===sol);
-  if(ok){
-    correct++; mark(true); idx++; setTimeout(nextItem,70); hud(); return;
-  }
+  if(ok){ correct++; mark(true); idx++; setTimeout(nextItem,70); hud(); return; }
   wrong++; mark(false);
   if(wrong>ERROR_LIMIT){ idx++; finishRound('errors'); return; }
-  q.splice(idx+1,0,cur); // small penalty
-  idx++; setTimeout(nextItem,70); hud();
+  q.splice(idx+1,0,cur); idx++; setTimeout(nextItem,70); hud();
 }
 
-/* ---------- Round setup & start ---------- */
-function renderPreviewBlocks(){
-  const chosen = getChosenFamilies();
-  if(!chosen.length){
-    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">No families selected</span>`;
-    return;
+/* Preview four facts for level (first round on new level only) */
+function previewLinesForFamily(f, dom){
+  if(dom==='add'){
+    return [`${f.a}+${f.b}=${f.c}`,`${f.b}+${f.a}=${f.c}`,`${f.c}-${f.a}=${f.b}`,`${f.c}-${f.b}=${f.a}`];
+  }else{
+    return [`${f.a}×${f.b}=${f.c}`,`${f.b}×${f.a}=${f.c}`,`${f.c}÷${f.a}=${f.b}`,`${f.c}÷${f.b}=${f.a}`];
   }
-  const toShow = chosen.length <= 3 ? chosen : [chosen[0]]; // up to 3 families
-  const blocks = toShow.map(f=>{
-    const lines = previewLinesForFamily(f, mode);
-    return `<div class="pv-block">
-              <div class="pv-title">Family: ${f.a} ${f.b} ${f.c}</div>
-              ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
-            </div>`;
-  }).join('');
-  $('eq').innerHTML = `<div class="pv">
-      ${blocks}
-      <button id="tapToStartBtn" class="btn primary big" style="margin-top:8px">Tap to begin</button>
-    </div>`;
-  $('tapToStartBtn').addEventListener('click', startTimedRound, {once:true});
+}
+function renderPreviewForLevel(code){
+  const dom = code.startsWith('A')?'add':'mul';
+  const block = document.createElement('div'); block.className='pv';
+  if(dom==='add'){
+    const c=+code.slice(1), fam = F_ADD.find(f=>f.c===c);
+    if(fam){
+      const lines = previewLinesForFamily(fam,'add');
+      block.innerHTML = `<div class="pv-block">
+        <div class="pv-title">Fakta for Sum ${c}</div>
+        ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
+      </div>
+      <button id="tapToStartBtn" class="btn primary big" style="margin-top:8px">Tap for å starte</button>`;
+    }
+  }else{
+    const t=+code.slice(1), fam = F_MUL.find(f=>f.a===t || f.b===t);
+    if(fam){
+      const lines = previewLinesForFamily(fam,'mul');
+      block.innerHTML = `<div class="pv-block">
+        <div class="pv-title">${t}-gangen</div>
+        ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
+      </div>
+      <button id="tapToStartBtn" class="btn primary big" style="margin-top:8px">Tap for å starte</button>`;
+    }
+  }
+  $('eq').innerHTML=''; $('eq').appendChild(block);
+  $('tapToStartBtn')?.addEventListener('click', startTimedRound, {once:true});
   document.addEventListener('keydown', onEnterStart, {once:true});
 }
 function onEnterStart(e){ if(e.key==='Enter'){ e.preventDefault(); startTimedRound(); } }
 
-function startRoundSetup(){
-  $('roundIdx').textContent = String(roundIdx+1);
-  $('roundTotal').textContent = String(totalRounds);
-  $('correct').textContent='0'; $('wrong').textContent='0';
-  $('feedback').textContent='';
-  $('timeBar').style.width='0%';
-  $('timeLeft').textContent = fmtTime(duration);
-
-  q = buildQueue();
-  if(q.length===0){ finishRound('empty'); return; }
-
-  if(roundIdx === 0){
-    // First round: show preview and wait for tap
-    waitingTap = true;
-    renderPreviewBlocks();
-  }else{
-    // Subsequent rounds: start immediately (no preview)
-    waitingTap = false;
-    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Get ready…</span>`;
-    setTimeout(startTimedRound, 300);
-  }
+function startLevel(code, preview){
+  show('play');
+  $('levelCode').textContent = code;
+  $('mixTag').style.display = flow.mixPending ? '' : 'none';
+  $('flowHint').textContent = 'To runder på rad med flyt → neste nivå.';
+  correct=0; wrong=0; $('correct').textContent='0'; $('wrong').textContent='0';
+  $('timeBar').style.width='0%'; $('timeLeft').textContent=fmtTime(ROUND_SEC);
+  // queue
+  q = buildQueueForLevel(code, flow.mixPending ? flow.mixWith : null); idx=0;
+  if(preview && !flow.mixPending){ waitingTap=true; renderPreviewForLevel(code); }
+  else { waitingTap=false; setTimeout(startTimedRound, 300); }
 }
 
+/* Round control */
 function startTimedRound(){
-  if(roundIdx===0 && !waitingTap){ return; } // guard for accidental double-start on first round
-  waitingTap = false;
-  running=true; paused=false; correct=0; wrong=0; idx=0;
-  startMs=Date.now(); pauseMs=0; pauseStart=0;
-  setEq(q[idx]); // first problem
+  waitingTap=false;
+  running=true; paused=false; startMs=Date.now(); pauseMs=0; pauseStart=0;
+  setEq(q[idx]);
   if(tick) clearInterval(tick);
   tick=setInterval(()=>{
     if(!running||paused) return;
     hud();
-    const e=elapsed();
-    if(e>=duration){ finishRound('time'); }
+    const e=((Date.now()-startMs)-pauseMs)/1000;
+    if(e>=ROUND_SEC){ finishRound('time'); }
   },100);
 }
-
-/* ---------- HUD ---------- */
 function elapsed(){ return ((paused?pauseStart:Date.now())-startMs - pauseMs)/1000; }
 function hud(){
   const e=elapsed();
   $('correct').textContent = String(correct);
   $('wrong').textContent   = String(wrong);
-
-  const left = Math.max(0, duration - e);
+  const left = Math.max(0, ROUND_SEC - e);
   $('timeLeft').textContent = fmtTime(left);
-  const prog = Math.max(0, Math.min(100, (e/duration)*100));
-  $('timeBar').style.width = prog + '%';
+  $('timeBar').style.width = Math.max(0, Math.min(100, (e/ROUND_SEC)*100)) + '%';
 }
 
-/* ---------- BIG ⚡ flash after each round ---------- */
+/* Flyt-kriterier */
+function cpmThreshold(code){
+  if(code.startsWith('A')){
+    const c=+code.slice(1);
+    return (c<=10)?24:20;
+  }else{
+    const t=+code.slice(1);
+    if(t<=5) return 18;
+    if(t<=8) return 16;
+    return 14;
+  }
+}
+function passedFlow(code, cpm, errors){
+  return cpm >= cpmThreshold(code) && errors <= 1;
+}
+
+/* BIG flash */
 function showRoundFlash(cpm, endedByErrors){
   const pop = $('roundPopup');
   const wrap = $('flashWrap');
   $('flashNum').textContent = (isFinite(cpm)?cpm.toFixed(1):'0.0');
   wrap.classList.toggle('err', !!endedByErrors);
-
-  // Restart the pop animation cleanly
-  wrap.style.animation = 'none';
-  // force reflow
-  void wrap.offsetHeight;
-  wrap.style.animation = '';
-
-  pop.style.display = 'grid';
-  pop.setAttribute('aria-hidden','false');
-
-  setTimeout(()=>{
-    pop.style.display = 'none';
-    pop.setAttribute('aria-hidden','true');
-  }, 1300);
+  wrap.style.animation='none'; void wrap.offsetHeight; wrap.style.animation='';
+  pop.style.display='grid'; pop.setAttribute('aria-hidden','false');
+  setTimeout(()=>{ pop.style.display='none'; pop.setAttribute('aria-hidden','true'); }, 1300);
 }
 
-/* ---------- Finish ---------- */
-function famLabel(id){ return id.slice(2).split('-').join(' '); }
+/* Finish */
 function finishRound(why){
-  const wasRunning = running;
-  running=false; if(tick) clearInterval(tick);
+  const wasRunning = running; running=false; if(tick) clearInterval(tick);
+  const e=elapsed(); const cpm = e>0? (correct/(e/60)) : 0;
+  flow.lastCpm = +(isFinite(cpm)?cpm.toFixed(1):'0'); saveFlow();
 
-  const e=elapsed();
-  const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
-  const fams=[...used].map(famLabel).join(' | ');
-  const cpm = e>0? (correct/(e/60)) : 0;
-
-  if(why==='errors'){
-    $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}).</span>`;
-  }else if(why==='empty'){
-    $('feedback').innerHTML = `<span class="bad">No families selected.</span>`;
-  }else if(wasRunning){
-    $('feedback').innerHTML = `<span class="good">Done</span>`;
+  if(wasRunning){
+    $('flowHint').textContent = why==='errors' ? 'Runden stoppet pga. mange feil.' : 'Runde ferdig.';
   }
 
-  results.push({
-    t: nowClock(),
-    mode: mode==='add'?'A/S':'M/D',
-    fams,
-    correct, wrong,
-    dur: duration,
-    cpm: +(isFinite(cpm)?cpm.toFixed(1):'0'),
-    why
-  });
+  // session log table
+  const row = {t:nowClock(), lvl:flow.currentLevel + (flow.mixPending?' (mix)':''), ok:correct, bad:wrong, dur:ROUND_SEC, cpm:flow.lastCpm, flyt:'—'};
+  const okFlow = passedFlow(flow.currentLevel, flow.lastCpm, wrong);
+  row.flyt = okFlow ? '✓' : (why==='errors'?'✗':'');
+  results.push(row);
 
-  // BIG ⚡ flash
-  showRoundFlash(cpm, why==='errors');
+  // flash
+  showRoundFlash(flow.lastCpm, why==='errors');
 
-  // next or summary
-  roundIdx++;
-  if(roundIdx < totalRounds){
-    setTimeout(startRoundSetup, 900);
+  // Update streak/mastery only if not a mix round
+  if(!flow.mixPending){
+    if(okFlow){ flow.streak++; } else { flow.streak=0; }
+    // Mastered if streak >=2
+    if(flow.streak>=2){
+      if(!flow.mastered.includes(flow.currentLevel)) flow.mastered.push(flow.currentLevel);
+      // Prepare mix when we now have at least 2 mastered
+      const prev = flow.mastered.length>=2 ? flow.mastered[flow.mastered.length-2] : null;
+      flow.mixWith = prev;
+      flow.mixPending = !!prev; // schedule one mix round with previous mastered
+      flow.streak=0;
+      // Advance to next level
+      flow.currentLevel = nextLevel(flow.currentLevel);
+      saveFlow();
+    }
   }else{
-    setTimeout(()=>{ renderSummary(); show('summary'); }, 700);
+    // consumed scheduled mix
+    flow.mixPending=false;
+    saveFlow();
   }
 
-  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Round complete</span>`;
+  renderSummaryTable();
+  // Auto-continue
+  setTimeout(()=> startLevel(flow.currentLevel, /*preview=*/!flow.mixPending), 900);
 }
 
-/* ---------- Play controls ---------- */
+/* Next level */
+function nextLevel(code){
+  if(code.startsWith('A')){
+    const c=+code.slice(1);
+    return 'A'+ Math.min(20, c+1);
+  }else{
+    const t=+code.slice(1);
+    return 'M'+ Math.min(12, t+1);
+  }
+}
+
+/* Play controls */
 $('pauseBtn').addEventListener('click',()=>{
   if(!running) return;
-  if(!paused){ paused=true; pauseStart=Date.now(); $('feedback').textContent='Paused'; }
-  else{ paused=false; pauseMs += Date.now()-pauseStart; pauseStart=0; $('feedback').textContent=''; }
+  if(!paused){ paused=true; pauseStart=Date.now(); $('flowHint').textContent='Pauset'; }
+  else{ paused=false; pauseMs += Date.now()-pauseStart; pauseStart=0; $('flowHint').textContent=''; }
 });
 $('stopBtn').addEventListener('click',()=>{
   if(!running) return;
   finishRound('manual');
 });
 
-/* ---------- Keypad ---------- */
-(function buildPad(){
+/* Summary table */
+function renderSummaryTable(){
+  const body=$('resBody');
+  body.innerHTML = results.slice(-10).map(r=>`
+    <tr>
+      <td>${r.t}</td>
+      <td>${r.lvl}</td>
+      <td>${r.ok}</td>
+      <td>${r.bad}</td>
+      <td class="right">${r.dur}</td>
+      <td class="right">${(+r.cpm).toFixed(1)}</td>
+      <td>${r.flyt}</td>
+    </tr>
+  `).join('');
+}
+$('sumContinue').addEventListener('click',()=> startLevel(flow.currentLevel, /*preview=*/!flow.mixPending));
+$('sumHome').addEventListener('click',()=> show('home'));
+
+/* Keypads (placement + play) */
+function buildPad(containerId, submitFn, typeFn, inputIdGetter){
   const keys=['1','2','3','4','5','6','7','8','9','0','⌫','OK'];
-  const pad=$('keypad'); pad.innerHTML='';
+  const pad=$(containerId); pad.innerHTML='';
   keys.forEach(k=>{
     const b=document.createElement('button');
     b.type='button'; b.className='key'; b.textContent=k; b.dataset.key=k;
     pad.appendChild(b);
   });
   pad.addEventListener('click',e=>{
-    const btn=e.target.closest('.key'); if(!btn||!running||paused) return;
-    const k=btn.dataset.key; const inp=$('ans'); if(!inp) return;
-    if(k==='OK'){ submit(); return; }
-    if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); onType(); return; }
-    if(/\d/.test(k)){ inp.value=((inp.value||'')+k).slice(0,3); onType(); }
+    const btn=e.target.closest('.key'); if(!btn) return;
+    const k=btn.dataset.key; const inp=$(inputIdGetter()); if(!inp) return;
+    if(k==='OK'){ submitFn(); return; }
+    if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); typeFn(); return; }
+    if(/\d/.test(k)){ inp.value=((inp.value||'')+k).slice(0,3); typeFn(); }
   });
-})();
-
-/* ---------- Summary ---------- */
-function renderSummary(){
-  $('summaryRounds').textContent = String(results.length);
-  const body=$('resBody');
-  body.innerHTML = results.map(r=>`
-    <tr>
-      <td>${r.t}</td>
-      <td>${r.mode}</td>
-      <td>${r.fams||'—'}</td>
-      <td class="right">${r.correct}</td>
-      <td class="right">${r.wrong}</td>
-      <td class="right">${r.dur}</td>
-      <td class="right">${r.cpm.toFixed(1)}</td>
-    </tr>`).join('');
 }
-$('replaySame').addEventListener('click',()=>{
-  roundIdx=0;
-  results.length = 0;
-  show('play');
-  startRoundSetup();
-});
-$('newSetup').addEventListener('click',()=>{
-  results.length = 0;
-  show('step1');
+buildPad('keypad', submit, onType, ()=> 'ans');
+buildPad('plPad', plSubmit, plOnType, ()=> 'plAns');
+
+/* Start placement */
+$('btnPlacement').addEventListener('click',()=>{
+  results=[]; renderSummaryTable();
+  plIdx=0; plStats={};
+  show('placement');
+  startPlacementRound();
 });
 
-/* ---------- Init ---------- */
+/* Init */
 function init(){
-  renderFamilies();
-  show('step1');
+  loadFlow();
+  show('home');
+  updateHomeButtons();
 }
 document.addEventListener('DOMContentLoaded', init);
 })();
