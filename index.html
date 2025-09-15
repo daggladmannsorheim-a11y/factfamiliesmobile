@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Fact Families — Mobile</title>
+<title>Fact Families — Mobile Wizard</title>
 <style>
   :root{
     --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --muted:#9aa3b2; --ring:#334155;
@@ -13,28 +13,31 @@
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
   .wrap{max-width:480px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
-
   h1{font-size:20px;margin:6px 0 2px;text-align:center;color:#fcd34d}
 
   .card{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:10px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
 
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .stat{background:#0b1223;border:1px solid var(--ring);border-radius:10px;padding:8px;text-align:center}
-  .stat .lab{font-size:10px;color:var(--muted);letter-spacing:.3px}
-  .stat .val{font-variant-numeric:tabular-nums;font-weight:900;font-size:18px}
-
   .chips{display:flex;gap:6px;overflow:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
-  .chip{flex:0 0 auto;border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:999px;padding:8px 10px;font-weight:700}
+  .chip{flex:0 0 auto;border:1px solid var(--ring);background:#0b1223;color:var(--ink);
+        border-radius:999px;padding:10px 12px;font-weight:800}
   .chip.active{border-color:var(--ok);box-shadow:0 0 0 2px #14532d inset}
+  .chip.big{font-size:16px}
 
   .btn{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:800}
   .btn.primary{border-color:var(--ok)}
   .btn.warn{border-color:var(--warn)}
   .btn.stop{border-color:var(--err)}
   .btn.big{width:100%;padding:12px;font-size:18px}
+
+  .families{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .fam{display:flex;align-items:center;gap:6px;border:1px solid var(--ring);background:#0b1223;border-radius:10px;padding:8px}
+  .fam input{accent-color:#22c55e}
+  .fam span{font-weight:800}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
   .stage{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--ring);border-radius:12px;padding:16px;background:radial-gradient(600px 200px at 50% -40%, #22c55e12, transparent 60%)}
   .eq{display:flex;align-items:center;justify-content:center;gap:10px;font-size:clamp(28px,8vw,40px);user-select:none}
@@ -49,19 +52,16 @@
   .progress{height:10px;background:var(--bar);border-radius:999px;overflow:hidden;border:1px solid #334155}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .2s ease}
 
-  .families{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .fam{display:flex;align-items:center;gap:6px;border:1px solid var(--ring);background:#0b1223;border-radius:10px;padding:8px}
-  .fam input{accent-color:#22c55e}
-  .fam span{font-weight:800}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+  .stat{background:#0b1223;border:1px solid var(--ring);border-radius:10px;padding:8px;text-align:center}
+  .lab{font-size:10px;color:var(--muted);letter-spacing:.3px}
+  .val{font-variant-numeric:tabular-nums;font-weight:900;font-size:18px}
 
   .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .key{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:12px 0;font-weight:900;font-size:18px}
   .key:active{transform:translateY(1px) scale(.99)}
 
   .muted{color:var(--muted);font-size:12px}
-  .hint{color:#a3e635;font-size:12px;text-align:center;min-height:1em}
   .good{color:#86efac}
   .bad{color:#fecaca}
 
@@ -76,86 +76,101 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Fact Families (Mobile)</h1>
+  <h1>Fact Families — Quick Wizard</h1>
 
-  <!-- Stats -->
-  <div class="card">
-    <div class="stats">
-      <div class="stat"><div class="lab">Correct</div><div id="correct" class="val">0</div></div>
-      <div class="stat"><div class="lab">CPM</div><div id="cpm" class="val">0.0</div></div>
-      <div class="stat"><div class="lab">Best</div><div id="best" class="val">0.0</div></div>
-    </div>
-  </div>
-
-  <!-- Time & duration -->
-  <div class="card">
-    <div class="time">
-      <div class="chips" id="durChips">
-        <button class="chip" data-dur="0">Stopwatch</button>
-        <button class="chip" data-dur="10">10s</button>
-        <button class="chip active" data-dur="30">30s</button>
-        <button class="chip" data-dur="60">1m</button>
-        <button class="chip" data-dur="120">2m</button>
-      </div>
-      <div id="timeLeft" class="tbig">00:30</div>
-    </div>
-    <div class="progress" style="margin-top:8px"><div id="timeBar" class="bar"></div></div>
-  </div>
-
-  <!-- Mode -->
-  <div class="card">
-    <div class="chips" id="modeChips" role="group" aria-label="Mode">
+  <!-- STEP 1: Families -->
+  <div id="step1" class="card">
+    <div class="chips" id="modeChips" role="group" aria-label="Mode" style="margin-bottom:8px">
       <button class="chip active" data-mode="add">Add/Subtract</button>
       <button class="chip" data-mode="mul">Multiply/Divide</button>
       <span class="spacer"></span>
       <span class="muted">Selected: <b id="selCount">0</b></span>
     </div>
-  </div>
-
-  <!-- Families -->
-  <div class="card">
     <div class="grid2" style="margin-bottom:8px">
       <button id="selAll" class="btn">Select all</button>
       <button id="selNone" class="btn">Clear</button>
     </div>
-    <div id="famGrid" class="families" aria-live="polite"></div>
+    <div id="famGrid" class="families" aria-live="polite" style="margin-bottom:8px"></div>
+    <div class="grid2">
+      <button id="s1Next" class="btn primary big" disabled>Next</button>
+    </div>
   </div>
 
-  <!-- Stage -->
-  <div class="card">
+  <!-- STEP 2: Duration -->
+  <div id="step2" class="card" style="display:none">
+    <div class="muted" style="margin-bottom:6px">Choose round duration</div>
+    <div class="chips" id="durChips" style="margin-bottom:8px">
+      <button class="chip big" data-dur="10">10 s</button>
+      <button class="chip big active" data-dur="30">30 s</button>
+      <button class="chip big" data-dur="60">60 s</button>
+    </div>
+    <div class="grid2">
+      <button id="s2Back" class="btn">Back</button>
+      <button id="s2Next" class="btn primary">Next</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Rounds -->
+  <div id="step3" class="card" style="display:none">
+    <div class="muted" style="margin-bottom:6px">How many rounds?</div>
+    <div class="chips" id="roundChips" style="margin-bottom:8px">
+      <button class="chip big active" data-r="3">3</button>
+      <button class="chip big" data-r="5">5</button>
+      <button class="chip big" data-r="10">10</button>
+      <button class="chip big" data-r="1">1</button>
+    </div>
+    <div class="grid2" style="margin-bottom:8px">
+      <button id="s3Back" class="btn">Back</button>
+      <button id="s3Start" class="btn primary">Start</button>
+    </div>
+    <div class="muted">Tip: You can adjust rounds later on the summary screen.</div>
+  </div>
+
+  <!-- PLAY -->
+  <div id="play" class="card" style="display:none">
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <div><b>Round</b> <span id="roundIdx">1</span>/<span id="roundTotal">1</span></div>
+      <div class="tbig" id="timeLeft">00:30</div>
+    </div>
+    <div class="progress" style="margin-bottom:8px"><div id="timeBar" class="bar"></div></div>
+
     <div class="stage">
       <div id="eq" class="eq" aria-live="polite">
-        <span style="font-size:18px;opacity:.9">Choose families, then Start</span>
+        <span style="font-size:18px;opacity:.9">Ready — press Start</span>
       </div>
     </div>
-    <div id="hint" class="hint"></div>
+
+    <div class="stats">
+      <div class="stat"><div class="lab">Correct</div><div id="correct" class="val">0</div></div>
+      <div class="stat"><div class="lab">Errors</div><div id="wrong" class="val">0</div></div>
+    </div>
+
+    <div class="keypad" id="keypad" style="margin-top:8px"></div>
+
     <div class="grid2" style="margin-top:8px">
-      <button id="startBtn" class="btn primary big">Start (Enter)</button>
-      <div class="grid2">
-        <button id="pauseBtn" class="btn warn">Pause</button>
-        <button id="stopBtn" class="btn stop">Stop</button>
-      </div>
+      <button id="pauseBtn" class="btn warn">Pause</button>
+      <button id="stopBtn" class="btn stop">Stop</button>
     </div>
+
     <div id="feedback" class="muted" style="text-align:center;margin-top:6px"></div>
   </div>
 
-  <!-- Keypad -->
-  <div class="card">
-    <div class="keypad" id="keypad"></div>
-  </div>
-
-  <!-- Results -->
-  <div class="card">
+  <!-- SUMMARY -->
+  <div id="summary" class="card" style="display:none">
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div style="font-weight:800">Results</div>
-      <button id="resetBtn" class="btn stop">Reset all</button>
+      <div style="font-weight:800">Summary</div>
+      <div class="muted"><span id="summaryRounds">0</span> rounds</div>
     </div>
     <table>
       <thead>
-        <tr><th>Time</th><th>Mode</th><th class="right">✓</th><th class="right">✗</th><th class="right">s</th><th class="right">CPM</th></tr>
+        <tr><th>Time</th><th>Mode</th><th>Fams</th><th class="right">✓</th><th class="right">✗</th><th class="right">s</th><th class="right">CPM</th></tr>
       </thead>
       <tbody id="resBody"></tbody>
     </table>
+    <div class="grid2" style="margin-top:8px">
+      <button id="replaySame" class="btn primary">Replay same</button>
+      <button id="newSetup" class="btn">New setup</button>
+    </div>
   </div>
 </div>
 
@@ -171,7 +186,7 @@ const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 const fmtTime = s => { if(s===null) return '—'; s=Math.max(0,Math.ceil(s)); return `${pad(Math.floor(s/60))}:${pad(s%60)}`; };
-const nowStamp = ()=>{ const d=new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const nowClock = ()=>{ const d=new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
 
 /* ---------- Families ---------- */
 // Add: c=2..20, a<=b
@@ -191,44 +206,38 @@ const famItemsMul=f=>[
   {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
   {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
 ];
+const famLabel=id=>id.slice(2).split('-').join(' ');
 
 /* ---------- State ---------- */
-const KEY='ff_mobile_v1';
 let mode='add';
 let selAdd=new Set(), selMul=new Set();
+let duration=30;
+let totalRounds=3, roundIdx=0;
 
 let running=false, paused=false;
-let startMs=0, pauseMs=0, pauseStart=0, dur=30, tick=null;
+let startMs=0, pauseMs=0, pauseStart=0, tick=null;
 let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0, hintTimer=null;
-let best=0;
-let results=[];
 
-function load(){
-  try{
-    const raw=localStorage.getItem(KEY); if(!raw) return;
-    const o=JSON.parse(raw);
-    best = +o.best || 0;
-    results = Array.isArray(o.results)? o.results : [];
-    selAdd = new Set(o.selAdd||[]);
-    selMul = new Set(o.selMul||[]);
-    mode = (o.mode==='mul')?'mul':'add';
-  }catch(e){}
+const ERROR_LIMIT=3;
+const results=[];
+
+/* ---------- Navigation ---------- */
+function show(id){
+  ['step1','step2','step3','play','summary'].forEach(x=>$(x).style.display='none');
+  $(id).style.display='';
 }
-function save(){
-  try{
-    localStorage.setItem(KEY, JSON.stringify({
-      best, results, selAdd:[...selAdd], selMul:[...selMul], mode
-    }));
-  }catch(e){}
+function enableNextFamilies(){
+  const count = (mode==='add'?selAdd:selMul).size;
+  $('selCount').textContent = count;
+  $('s1Next').disabled = count===0;
 }
 
-/* ---------- UI Build ---------- */
+/* ---------- Step 1: Families ---------- */
 function renderFamilies(){
   const grid=$('famGrid'); grid.innerHTML='';
   const list = mode==='add'?F_ADD:F_MUL;
   const sel  = mode==='add'?selAdd:selMul;
 
-  // Small: only show c (sum/product) as chip; value text "a b c"
   const frag=document.createDocumentFragment();
   list.forEach(f=>{
     const lab=document.createElement('label');
@@ -243,48 +252,60 @@ function renderFamilies(){
     if(!cb) return;
     const set = mode==='add'?selAdd:selMul;
     if(cb.checked) set.add(cb.dataset.id); else set.delete(cb.dataset.id);
-    $('selCount').textContent = set.size;
-    save();
+    enableNextFamilies();
   };
 
-  $('selCount').textContent = sel.size;
+  enableNextFamilies();
 }
-function famLabel(id){ return id.slice(2).split('-').join(' '); }
 
-/* ---------- Mode/Dur chips ---------- */
 $('modeChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
   [...$('modeChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   mode = b.dataset.mode;
-  save();
   renderFamilies();
 });
-$('durChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('durChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  dur = Number(b.dataset.dur);
-  $('timeLeft').textContent = dur===0 ? '00:00' : fmtTime(dur);
-  $('timeBar').style.width='0%';
-});
 
-/* ---------- Selection helpers ---------- */
 $('selAll').addEventListener('click',()=>{
   const set = mode==='add'?selAdd:selMul;
   set.clear();
   (mode==='add'?F_ADD:F_MUL).forEach(f=>set.add(f.id));
-  renderFamilies(); save();
+  renderFamilies();
 });
 $('selNone').addEventListener('click',()=>{
   const set = mode==='add'?selAdd:selMul;
-  set.clear(); renderFamilies(); save();
+  set.clear();
+  renderFamilies();
+});
+$('s1Next').addEventListener('click',()=> show('step2'));
+
+/* ---------- Step 2: Duration ---------- */
+$('durChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('durChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  duration = Number(b.dataset.dur);
+});
+$('s2Back').addEventListener('click',()=> show('step1'));
+$('s2Next').addEventListener('click',()=> show('step3'));
+
+/* ---------- Step 3: Rounds ---------- */
+$('roundChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('roundChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  totalRounds = Number(b.dataset.r);
+});
+$('s3Back').addEventListener('click',()=> show('step2'));
+$('s3Start').addEventListener('click',()=>{
+  roundIdx = 0;
+  show('play');
+  startRoundWithCountdown();
 });
 
-/* ---------- Stage / Input ---------- */
+/* ---------- Play: engine ---------- */
 function inputHTML(){ return `<input id="ans" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
 function setEq(item){
-  clearHint();
   cur=item;
   const [x,y,z]=item.pattern, op=item.op;
   const miss=Math.floor(Math.random()*3);
@@ -309,20 +330,12 @@ function setEq(item){
     inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
     inp.focus({preventScroll:true});
   }
-  startHint();
 }
-function startHint(){
-  if(hintTimer) clearTimeout(hintTimer);
-  hintTimer = setTimeout(()=>{ if(running && !paused) $('hint').textContent = String(sol); }, 3000);
-}
-function clearHint(){ if(hintTimer) clearTimeout(hintTimer); $('hint').textContent=''; }
 function mark(ok){
   const inp=$('ans'); if(!inp) return;
   inp.classList.remove('ok','err');
   inp.classList.add(ok?'ok':'err');
 }
-
-/* ---------- Queue ---------- */
 function buildQueue(){
   const list = mode==='add'?F_ADD:F_MUL;
   const sel  = mode==='add'?selAdd:selMul;
@@ -332,14 +345,10 @@ function buildQueue(){
   shuffle(items);
   return items;
 }
-function next(){
-  if(idx>=q.length){ q=q.concat(buildQueue()); if(q.length===0){ finish('empty'); return; } }
+function nextItem(){
+  if(idx>=q.length){ q=q.concat(buildQueue()); if(q.length===0){ finishRound('empty'); return; } }
   setEq(q[idx]); hud();
 }
-
-/* ---------- Game flow ---------- */
-const ERROR_LIMIT=3;
-
 function onType(){
   if(!running || paused) return;
   const inp=$('ans'); if(!inp) return;
@@ -352,119 +361,97 @@ function submit(){
   const v=$('ans')?.value?.trim(); if(v==='') return;
   const ok=(+v===sol);
   if(ok){
-    correct++; mark(true); idx++; clearHint(); setTimeout(next,70); hud(); return;
+    correct++; mark(true); idx++; setTimeout(nextItem,70); hud(); return;
   }
-  // wrong
   wrong++; mark(false);
-  if(wrong>ERROR_LIMIT){
-    idx++; clearHint(); finish('errors'); return;
-  }
-  // small penalty: requeue once
-  q.splice(idx+1,0,cur);
-  idx++; clearHint(); setTimeout(next,70); hud();
+  if(wrong>ERROR_LIMIT){ idx++; finishRound('errors'); return; }
+  q.splice(idx+1,0,cur); // small penalty
+  idx++; setTimeout(nextItem,70); hud();
 }
 
-/* ---------- Buttons ---------- */
-$('startBtn').addEventListener('click',()=>{ if(!running) countdownThenStart(); });
+/* ---------- Round control ---------- */
+function startRoundWithCountdown(){
+  $('roundIdx').textContent = String(roundIdx+1);
+  $('roundTotal').textContent = String(totalRounds);
+  $('correct').textContent='0'; $('wrong').textContent='0';
+  $('feedback').textContent='';
+
+  const ov=$('overlay'), c=$('count'); ov.style.display='grid'; let t=3; c.textContent=t;
+  const iv=setInterval(()=>{ t--; if(t>0){ c.textContent=t; } else { c.textContent='GO!'; setTimeout(()=>{ ov.style.display='none'; clearInterval(iv); beginRound(); },500);} },1000);
+}
+function beginRound(){
+  running=true; paused=false; correct=0; wrong=0; idx=0; q=buildQueue();
+  startMs=Date.now(); pauseMs=0; pauseStart=0;
+  $('timeBar').style.width='0%';
+  $('timeLeft').textContent = fmtTime(duration);
+  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Get ready…</span>`;
+  if(q.length===0){ finishRound('empty'); return; }
+  nextItem();
+  if(tick) clearInterval(tick);
+  tick=setInterval(()=>{
+    if(!running||paused) return;
+    hud();
+    const e=elapsed();
+    if(e>=duration){ finishRound('time'); }
+  },100);
+}
+function elapsed(){ return ((paused?pauseStart:Date.now())-startMs - pauseMs)/1000; }
+function hud(){
+  const e=elapsed();
+  $('correct').textContent = String(correct);
+  $('wrong').textContent   = String(wrong);
+
+  const left = Math.max(0, duration - e);
+  $('timeLeft').textContent = fmtTime(left);
+  const prog = Math.max(0, Math.min(100, (e/duration)*100));
+  $('timeBar').style.width = prog + '%';
+}
+function finishRound(why){
+  running=false; if(tick) clearInterval(tick);
+  const e=elapsed();
+  const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
+  const fams=[...used].map(famLabel).join(' | ');
+  const cpm = e>0? (correct/(e/60)) : 0;
+
+  if(why==='errors'){
+    $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}).</span>`;
+  }else if(why==='empty'){
+    $('feedback').innerHTML = `<span class="bad">No families selected.</span>`;
+  }else{
+    $('feedback').innerHTML = `<span class="good">Done — CPM ${cpm.toFixed(1)}</span>`;
+  }
+
+  results.push({
+    t: nowClock(),
+    mode: mode==='add'?'A/S':'M/D',
+    fams,
+    correct, wrong,
+    dur: duration,
+    cpm: +(isFinite(cpm)?cpm.toFixed(1):'0'),
+    why
+  });
+
+  // Advance or summary
+  roundIdx++;
+  if(roundIdx < totalRounds){
+    setTimeout(startRoundWithCountdown, 900);
+  }else{
+    setTimeout(()=>{ renderSummary(); show('summary'); }, 700);
+  }
+
+  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Round complete</span>`;
+}
+
+/* ---------- Play controls ---------- */
 $('pauseBtn').addEventListener('click',()=>{
   if(!running) return;
   if(!paused){ paused=true; pauseStart=Date.now(); $('feedback').textContent='Paused'; }
   else{ paused=false; pauseMs += Date.now()-pauseStart; pauseStart=0; $('feedback').textContent=''; }
 });
-$('stopBtn').addEventListener('click',()=>{ if(running) finish('manual'); });
-$('resetBtn').addEventListener('click',()=>{
-  if(!confirm('Reset best score and results?')) return;
-  best=0; results=[]; save(); renderResults(); $('best').textContent='0.0';
+$('stopBtn').addEventListener('click',()=>{
+  if(!running) return;
+  finishRound('manual');
 });
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){ e.preventDefault(); if(!running) $('startBtn').click(); }
-  if(e.key===' '||e.key==='Spacebar'){ e.preventDefault(); $('pauseBtn').click(); }
-});
-
-function countdownThenStart(){
-  const sel = (mode==='add'?selAdd:selMul).size;
-  if(sel===0){ alert('Select at least one fact family.'); return; }
-  const ov=$('overlay'), c=$('count'); ov.style.display='grid'; let t=3; c.textContent=t;
-  const iv=setInterval(()=>{ t--; if(t>0){ c.textContent=t; } else { c.textContent='GO!'; setTimeout(()=>{ ov.style.display='none'; clearInterval(iv); begin(); },500);} },1000);
-}
-function begin(){
-  running=true; paused=false; correct=0; wrong=0; idx=0; q=buildQueue();
-  startMs=Date.now(); pauseMs=0; pauseStart=0; $('timeBar').style.width='0%'; $('feedback').textContent='';
-  if(q.length===0){ running=false; return; }
-  next();
-  if(tick) clearInterval(tick);
-  tick=setInterval(()=>{
-    if(!running||paused) return;
-    hud();
-    if(dur>0){
-      const e=elapsed(); if(e>=dur) finish('time');
-    }
-  },100);
-}
-
-/* ---------- HUD ---------- */
-function elapsed(){ return ((paused?pauseStart:Date.now())-startMs - pauseMs)/1000; }
-function hud(){
-  const e=elapsed();
-  const cpm = e>0? (correct/(e/60)) : 0;
-  $('correct').textContent = String(correct);
-  $('cpm').textContent = cpm.toFixed(1);
-  $('best').textContent = best.toFixed(1);
-
-  if(dur===0){
-    $('timeLeft').textContent = fmtTime(e);
-    $('timeBar').style.width='0%';
-  }else{
-    const left = Math.max(0, dur - e);
-    $('timeLeft').textContent = fmtTime(left);
-    const prog = Math.max(0, Math.min(100, (e/dur)*100));
-    $('timeBar').style.width = prog + '%';
-  }
-}
-
-/* ---------- Finish ---------- */
-function finish(why){
-  running=false; if(tick) clearInterval(tick);
-  const e=elapsed();
-  const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
-  const fams=[...used].map(famLabel).join(' | ');
-
-  const cpm = e>0? (correct/(e/60)) : 0;
-  if(why==='errors'){
-    $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}). No points.</span>`;
-  }else{
-    $('feedback').innerHTML = `<span class="good">Done — CPM ${cpm.toFixed(1)}</span>`;
-    if(cpm>best){ best=cpm; $('feedback').innerHTML += ` • New best!`; }
-  }
-
-  results.unshift({
-    t: nowStamp(),
-    mode: mode==='add'?'A/S':'M/D',
-    fams,
-    correct, wrong,
-    dur: Math.round(dur===0?e:Math.min(dur,e)),
-    cpm: +(isFinite(cpm)?cpm.toFixed(1):'0')
-  });
-  renderResults(); save();
-
-  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Ready — press Start</span>`;
-  clearHint();
-}
-
-/* ---------- Results ---------- */
-function renderResults(){
-  const body=$('resBody');
-  body.innerHTML = results.slice(0,30).map(r=>`
-    <tr>
-      <td>${r.t}</td>
-      <td>${r.mode}</td>
-      <td class="right">${r.correct}</td>
-      <td class="right">${r.wrong}</td>
-      <td class="right">${r.dur}</td>
-      <td class="right">${r.cpm.toFixed(1)}</td>
-    </tr>`).join('');
-}
 
 /* ---------- Keypad ---------- */
 (function buildPad(){
@@ -484,16 +471,38 @@ function renderResults(){
   });
 })();
 
+/* ---------- Summary ---------- */
+function renderSummary(){
+  $('summaryRounds').textContent = String(results.length);
+  const body=$('resBody');
+  body.innerHTML = results.map(r=>`
+    <tr>
+      <td>${r.t}</td>
+      <td>${r.mode}</td>
+      <td>${r.fams||'—'}</td>
+      <td class="right">${r.correct}</td>
+      <td class="right">${r.wrong}</td>
+      <td class="right">${r.dur}</td>
+      <td class="right">${r.cpm.toFixed(1)}</td>
+    </tr>`).join('');
+}
+
+$('replaySame').addEventListener('click',()=>{
+  // keep same families/mode/duration/rounds
+  roundIdx=0;
+  results.length = 0; // clear summary for the new session
+  show('play');
+  startRoundWithCountdown();
+});
+$('newSetup').addEventListener('click',()=>{
+  results.length = 0;
+  show('step1');
+});
+
 /* ---------- Init ---------- */
 function init(){
-  load();
-  // Activate mode chip
-  [...$('modeChips').querySelectorAll('.chip')].forEach(x=>x.classList.toggle('active', x.dataset.mode===mode));
-  // Activate dur chip default (30s)
-  $('timeLeft').textContent = fmtTime(dur);
   renderFamilies();
-  renderResults();
-  $('best').textContent = best.toFixed(1);
+  show('step1');
 }
 document.addEventListener('DOMContentLoaded', init);
 })();
