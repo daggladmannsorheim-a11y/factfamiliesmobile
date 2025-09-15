@@ -73,11 +73,26 @@
   th{text-align:left;color:#cbd5e1;position:sticky;top:0;background:#0f172a}
   td.right{text-align:right}
 
-  /* quick round result popup */
-  #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:20;background:rgba(0,0,0,.25)}
-  #roundPopup .box{background:#0b1223;border:1px solid #334155;border-radius:14px;padding:14px 16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-  #roundPopup .title{font-weight:900;margin-bottom:4px}
-  #roundPopup .line{font-variant-numeric:tabular-nums}
+  /* ⚡ BIG round result flash */
+  #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:30;pointer-events:none}
+  #roundPopup .flash{
+    display:flex;align-items:center;gap:0.4em;
+    font-size:clamp(48px,16vw,110px);font-weight:1000;letter-spacing:.5px;
+    padding:.15em .35em;border-radius:18px;border:2px solid #d9b63a;
+    color:#fde68a;background:radial-gradient(600px 200px at 50% -30%, rgba(252,211,77,.15), transparent 60%), #0b1223;
+    box-shadow:0 10px 40px rgba(0,0,0,.45), 0 0 0 6px rgba(252,211,77,.08);
+    transform:scale(.92);opacity:.98;animation:pop 650ms ease-out both;
+  }
+  #roundPopup .flash.err{
+    border-color:#ef4444;color:#fecaca;
+    box-shadow:0 10px 40px rgba(0,0,0,.45), 0 0 0 6px rgba(239,68,68,.12);
+  }
+  .bolt{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+  @keyframes pop{
+    0%{transform:scale(.85);opacity:.0}
+    60%{transform:scale(1.03);opacity:1}
+    100%{transform:scale(1);opacity:1}
+  }
 
   /* preview block */
   .pv{display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -137,7 +152,7 @@
       <button id="s3Back" class="btn">Back</button>
       <button id="s3Start" class="btn primary">Start</button>
     </div>
-    <div class="muted">Tip: You’ll get a quick CPM after each round.</div>
+    <div class="muted">You’ll see a ⚡ CPM flash after every round.</div>
   </div>
 
   <!-- PLAY -->
@@ -190,12 +205,9 @@
   </div>
 </div>
 
-<!-- Quick CPM popup -->
-<div id="roundPopup">
-  <div class="box">
-    <div id="rpTitle" class="title">Round result</div>
-    <div id="rpLine" class="line">CPM 0.0 (✓0, ✗0)</div>
-  </div>
+<!-- ⚡ BIG CPM flash -->
+<div id="roundPopup" aria-live="polite" aria-hidden="true">
+  <div id="flashWrap" class="flash"><span class="bolt">⚡</span><span id="flashNum">0.0</span></div>
 </div>
 
 <script>
@@ -492,13 +504,26 @@ function hud(){
   $('timeBar').style.width = prog + '%';
 }
 
-/* ---------- Quick CPM popup after each round ---------- */
-function showRoundPopup(n, cpm, c, w, endedByErrors){
+/* ---------- BIG ⚡ flash after each round ---------- */
+function showRoundFlash(cpm, endedByErrors){
   const pop = $('roundPopup');
-  $('rpTitle').textContent = `Round ${n} result`;
-  $('rpLine').textContent  = `CPM ${cpm.toFixed(1)} (✓${c}, ✗${w})` + (endedByErrors ? ' — ended by errors' : '');
+  const wrap = $('flashWrap');
+  $('flashNum').textContent = (isFinite(cpm)?cpm.toFixed(1):'0.0');
+  wrap.classList.toggle('err', !!endedByErrors);
+
+  // Restart the pop animation cleanly
+  wrap.style.animation = 'none';
+  // force reflow
+  void wrap.offsetHeight;
+  wrap.style.animation = '';
+
   pop.style.display = 'grid';
-  setTimeout(()=>{ pop.style.display='none'; }, 1400);
+  pop.setAttribute('aria-hidden','false');
+
+  setTimeout(()=>{
+    pop.style.display = 'none';
+    pop.setAttribute('aria-hidden','true');
+  }, 1300);
 }
 
 /* ---------- Finish ---------- */
@@ -517,7 +542,7 @@ function finishRound(why){
   }else if(why==='empty'){
     $('feedback').innerHTML = `<span class="bad">No families selected.</span>`;
   }else if(wasRunning){
-    $('feedback').innerHTML = `<span class="good">Done — CPM ${cpm.toFixed(1)}</span>`;
+    $('feedback').innerHTML = `<span class="good">Done</span>`;
   }
 
   results.push({
@@ -530,9 +555,8 @@ function finishRound(why){
     why
   });
 
-  // popup
-  const displayRoundNumber = roundIdx + 1;
-  showRoundPopup(displayRoundNumber, cpm, correct, wrong, why==='errors');
+  // BIG ⚡ flash
+  showRoundFlash(cpm, why==='errors');
 
   // next or summary
   roundIdx++;
