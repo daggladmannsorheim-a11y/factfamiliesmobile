@@ -1,637 +1,810 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Fact Families — Practice</title>
+<title>Fact Families — Mobil + Adaptiv (Flyt)</title>
 <style>
   :root{
     --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --muted:#9aa3b2; --ring:#334155;
-    --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --bar:#1f2937;
+    --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --bar:#1f2937; --gold:#d9b63a;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:480px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+  .wrap{max-width:520px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
 
-  /* Headings */
+  /* Cards & headings */
   h1{font-size:20px;margin:6px 0 2px;text-align:center;color:#fcd34d}
   .pageH{font-weight:900;margin-bottom:6px;color:#fcd34d;font-size:16px}
-
-  /* Cards & controls */
   .card{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:10px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
+  .muted{color:var(--muted);font-size:12px}
+  .good{color:#86efac}
+  .bad{color:#fecaca}
 
-  .chips{display:flex;gap:6px;overflow:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .chips::-webkit-scrollbar{display:none}
-  .chip{flex:0 0 auto;border:1px solid var(--ring);background:#0b1223;color:var(--ink);
-        border-radius:999px;padding:10px 12px;font-weight:800}
-  .chip.active{border-color:var(--ok);box-shadow:0 0 0 2px #14532d inset}
-  .chip.big{font-size:16px}
-
-  .btn{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:800}
+  /* Buttons & chips */
+  .btn{border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
   .btn.primary{border-color:var(--ok)}
   .btn.warn{border-color:var(--warn)}
   .btn.stop{border-color:var(--err)}
   .btn.big{width:100%;padding:12px;font-size:18px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .chips{display:flex;gap:6px;overflow:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--ring);background:#0b1223;color:var(--ink);border-radius:999px;padding:10px 12px;font-weight:800}
+  .chip.active{border-color:var(--ok);box-shadow:0 0 0 2px #14532d inset}
+  .chip.big{font-size:16px}
+  .chip.small{padding:6px 10px;font-size:12px}
 
-  .families{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .fam{display:flex;align-items:center;gap:6px;border:1px solid var(--ring);background:#0b1223;border-radius:10px;padding:8px}
-  .fam input{accent-color:#22c55e}
-  .fam span{font-weight:800}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-
+  /* Stage / equation */
   .stage{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--ring);border-radius:12px;padding:16px;background:radial-gradient(600px 200px at 50% -40%, #22c55e12, transparent 60%)}
   .eq{display:flex;align-items:center;justify-content:center;gap:10px;font-size:clamp(28px,8vw,40px);user-select:none}
   .numbox{width:5.2ch;height:2.2em;border-radius:12px;border:3px solid #374151;background:#0b1223;color:var(--ink);font-weight:900;text-align:center;font-size:1em}
-  .numbox.ok{border-color:var(--ok);background:#052e15;color:#c7f9d4}
-  .numbox.err{border-color:var(--err);background:#3b0a0a;color:#fecaca}
+  .numbox.ok{border-color:#22c55e;background:#052e15;color:#c7f9d4}
+  .numbox.err{border-color:#ef4444;background:#3b0a0a;color:#fecaca}
   .numbox::-webkit-outer-spin-button,.numbox::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   input.numbox{-moz-appearance:textfield}
 
+  /* Small stats & progress */
   .tbig{font-variant-numeric:tabular-nums;font-weight:900;font-size:22px}
   .progress{height:10px;background:var(--bar);border-radius:999px;overflow:hidden;border:1px solid #334155}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .2s ease}
-
   .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
   .stat{background:#0b1223;border:1px solid var(--ring);border-radius:10px;padding:8px;text-align:center}
   .lab{font-size:10px;color:#9aa3b2;letter-spacing:.3px}
   .val{font-variant-numeric:tabular-nums;font-weight:900;font-size:18px}
 
-  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .key{border:1px solid var(--ring);background:#0b1223;color:#e5e7eb;border-radius:12px;padding:12px 0;font-weight:900;font-size:18px}
-  .key:active{transform:translateY(1px) scale(.99)}
+  /* Grid helpers */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .families{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .fam{display:flex;align-items:center;gap:6px;border:1px solid var(--ring);background:#0b1223;border-radius:10px;padding:8px}
+  .fam input{accent-color:#22c55e}
+  .fam span{font-weight:800}
 
-  .muted{color:#9aa3b2;font-size:12px}
-  .good{color:#86efac}
-  .bad{color:#fecaca}
-
+  /* Tables */
   table{width:100%;border-collapse:collapse;font-size:12px}
   th,td{padding:6px;border-bottom:1px solid #22314a}
   th{text-align:left;color:#cbd5e1;position:sticky;top:0;background:#0f172a}
   td.right{text-align:right}
 
+  /* Keypad */
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .key{border:1px solid var(--ring);background:#0b1223;color:#e5e7eb;border-radius:12px;padding:12px 0;font-weight:900;font-size:18px}
+  .key:active{transform:translateY(1px) scale(.99)}
+
   /* ⚡ BIG round result flash */
-  #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:30;pointer-events:none}
+  #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:40;pointer-events:none}
   #roundPopup .flash{
     display:flex;align-items:center;gap:0.4em;
     font-size:clamp(48px,16vw,110px);font-weight:1000;letter-spacing:.5px;
-    padding:.15em .35em;border-radius:18px;border:2px solid #d9b63a;
+    padding:.15em .35em;border-radius:18px;border:2px solid var(--gold);
     color:#fde68a;background:radial-gradient(600px 200px at 50% -30%, rgba(252,211,77,.15), transparent 60%), #0b1223;
     box-shadow:0 10px 40px rgba(0,0,0,.45), 0 0 0 6px rgba(252,211,77,.08);
     transform:scale(.92);opacity:.98;animation:pop 650ms ease-out both;
   }
-  #roundPopup .flash.err{
-    border-color:#ef4444;color:#fecaca;
-    box-shadow:0 10px 40px rgba(0,0,0,.45), 0 0 0 6px rgba(239,68,68,.12);
-  }
+  #roundPopup .flash.err{ border-color:#ef4444;color:#fecaca; box-shadow:0 10px 40px rgba(0,0,0,.45), 0 0 0 6px rgba(239,68,68,.12); }
   .bolt{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
-  @keyframes pop{
-    0%{transform:scale(.85);opacity:.0}
-    60%{transform:scale(1.03);opacity:1}
-    100%{transform:scale(1);opacity:1}
-  }
+  @keyframes pop{ 0%{transform:scale(.85);opacity:.0} 60%{transform:scale(1.03);opacity:1} 100%{transform:scale(1);opacity:1} }
 
-  /* preview block */
+  /* Preview block */
   .pv{display:flex;flex-direction:column;align-items:center;gap:8px}
   .pv-block{background:#0b1223;border:1px dashed var(--ring);border-radius:10px;padding:8px 10px;width:100%;max-width:360px}
   .pv-title{font-size:12px;color:#9aa3b2;text-align:center;margin-bottom:4px}
   .pv-line{font-weight:900;text-align:center}
+
+  /* Level chip + tooltip */
+  .levelChip{border:1px solid #334155;background:#0b1223;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;display:inline-flex;gap:6px;align-items:center}
+  .iconBtn{border:1px solid #334155;background:#0b1223;border-radius:8px;padding:2px 6px;font-size:12px;cursor:pointer}
+  #tipBackdrop{position:fixed;inset:0;background:rgba(2,6,23,.6);display:none;place-items:center;z-index:50;backdrop-filter:blur(2px)}
+  #tipBox{max-width:92vw;background:#0b1223;border:1px solid #334155;border-radius:14px;padding:12px 14px;box-shadow:0 12px 36px rgba(0,0,0,.5);font-size:14px}
+  #tipBox h3{margin:0 0 6px;font-size:14px;color:#fcd34d}
+  #tipBox .mini{font-size:12px;color:#9aa3b2;margin-top:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <!-- Big heading only on first page -->
-  <h1 id="mainTitle">Choose the fact families you want to practice</h1>
 
-  <!-- STEP 1: Families -->
-  <div id="step1" class="card">
-    <div class="pageH">Pick fact families</div>
-    <div class="chips" id="modeChips" role="group" aria-label="Mode" style="margin-bottom:8px">
-      <button class="chip active" data-mode="add">Add/Subtract</button>
-      <button class="chip" data-mode="mul">Multiply/Divide</button>
-      <span class="spacer"></span>
-      <span class="muted">Selected: <b id="selCount">0</b></span>
-    </div>
-    <div class="grid2" style="margin-bottom:8px">
-      <button id="selAll" class="btn">Select all</button>
-      <button id="selNone" class="btn">Clear</button>
-    </div>
-    <div id="famGrid" class="families" aria-live="polite" style="margin-bottom:8px"></div>
+  <!-- LANDING: velg modus -->
+  <div id="landing" class="card">
+    <h1>Hva vil du gjøre?</h1>
     <div class="grid2">
-      <button id="s1Next" class="btn primary big" disabled>Next</button>
+      <button id="openWizardBtn" class="btn big">Vanlig øving</button>
+      <button id="openFlowBtn" class="btn primary big">Adaptiv (Flyt)</button>
     </div>
   </div>
 
-  <!-- STEP 2: Duration -->
-  <div id="step2" class="card" style="display:none">
-    <div class="pageH">Choose round duration</div>
-    <div class="chips" id="durChips" style="margin-bottom:8px">
-      <button class="chip big" data-dur="10">10 s</button>
-      <button class="chip big active" data-dur="30">30 s</button>
-      <button class="chip big" data-dur="60">60 s</button>
-    </div>
-    <div class="grid2">
-      <button id="s2Back" class="btn">Back</button>
-      <button id="s2Next" class="btn primary">Next</button>
-    </div>
-  </div>
+  <!-- ============ WIZARD ROOT (vanlig øving) ============ -->
+  <div id="wizardRoot" style="display:none">
+    <h1 id="wMainTitle">Velg de tallfamiliene du vil øve på</h1>
 
-  <!-- STEP 3: Rounds -->
-  <div id="step3" class="card" style="display:none">
-    <div class="pageH">Choose number of rounds</div>
-    <div class="chips" id="roundChips" style="margin-bottom:8px">
-      <button class="chip big active" data-r="3">3</button>
-      <button class="chip big" data-r="5">5</button>
-      <button class="chip big" data-r="10">10</button>
-      <button class="chip big" data-r="1">1</button>
-    </div>
-    <div class="grid2" style="margin-bottom:8px">
-      <button id="s3Back" class="btn">Back</button>
-      <button id="s3Start" class="btn primary">Start</button>
-    </div>
-    <div class="muted">You’ll see a ⚡ CPM flash after every round.</div>
-  </div>
-
-  <!-- PLAY -->
-  <div id="play" class="card" style="display:none">
-    <div class="pageH">Practice</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div><b>Round</b> <span id="roundIdx">1</span>/<span id="roundTotal">1</span></div>
-      <div class="tbig" id="timeLeft">00:30</div>
-    </div>
-    <div class="progress" style="margin-bottom:8px"><div id="timeBar" class="bar"></div></div>
-
-    <div class="stage">
-      <div id="eq" class="eq" aria-live="polite">
-        <span style="font-size:18px;opacity:.9">Tap “Start” to preview</span>
+    <!-- W1: Familier -->
+    <div id="wStep1" class="card">
+      <div class="pageH">Velg tallfamilier</div>
+      <div class="chips" id="wModeChips" style="margin-bottom:8px">
+        <button class="chip active" data-mode="add">Pluss/Minus</button>
+        <button class="chip" data-mode="mul">Gange/Deling</button>
+        <span class="spacer"></span>
+        <span class="muted">Valgt: <b id="wSelCount">0</b></span>
+      </div>
+      <div class="grid2" style="margin-bottom:8px">
+        <button id="wSelAll" class="btn">Velg alle</button>
+        <button id="wSelNone" class="btn">Tøm</button>
+      </div>
+      <div id="wFamGrid" class="families" style="margin-bottom:8px"></div>
+      <div class="grid2">
+        <button id="w1Next" class="btn primary big" disabled>Neste</button>
       </div>
     </div>
 
-    <div class="stats">
-      <div class="stat"><div class="lab">Correct</div><div id="correct" class="val">0</div></div>
-      <div class="stat"><div class="lab">Errors</div><div id="wrong" class="val">0</div></div>
+    <!-- W2: Varighet -->
+    <div id="wStep2" class="card" style="display:none">
+      <div class="pageH">Velg rundetid</div>
+      <div class="chips" id="wDurChips" style="margin-bottom:8px">
+        <button class="chip big" data-dur="10">10 s</button>
+        <button class="chip big active" data-dur="30">30 s</button>
+        <button class="chip big" data-dur="60">60 s</button>
+      </div>
+      <div class="grid2">
+        <button id="w2Back" class="btn">Tilbake</button>
+        <button id="w2Next" class="btn primary">Neste</button>
+      </div>
     </div>
 
-    <div class="keypad" id="keypad" style="margin-top:8px"></div>
-
-    <div class="grid2" style="margin-top:8px">
-      <button id="pauseBtn" class="btn warn">Pause</button>
-      <button id="stopBtn" class="btn stop">Stop</button>
+    <!-- W3: Antall runder -->
+    <div id="wStep3" class="card" style="display:none">
+      <div class="pageH">Velg antall runder</div>
+      <div class="chips" id="wRoundChips" style="margin-bottom:8px">
+        <button class="chip big active" data-r="3">3</button>
+        <button class="chip big" data-r="5">5</button>
+        <button class="chip big" data-r="10">10</button>
+        <button class="chip big" data-r="1">1</button>
+      </div>
+      <div class="grid2" style="margin-bottom:8px">
+        <button id="w3Back" class="btn">Tilbake</button>
+        <button id="w3Start" class="btn primary">Start</button>
+      </div>
+      <div class="muted">⚡ Viser CPM etter hver runde.</div>
     </div>
 
-    <div id="feedback" class="muted" style="text-align:center;margin-top:6px"></div>
+    <!-- WPLAY -->
+    <div id="wPlay" class="card" style="display:none">
+      <div class="pageH">Øv</div>
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <div><b>Runde</b> <span id="wRoundIdx">1</span>/<span id="wRoundTotal">1</span></div>
+        <div class="tbig" id="wTimeLeft">00:30</div>
+      </div>
+      <div class="progress" style="margin-bottom:8px"><div id="wTimeBar" class="bar"></div></div>
+      <div class="stage"><div id="wEq" class="eq"><span style="font-size:18px;opacity:.9">Trykk Start</span></div></div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Riktige</div><div id="wOK" class="val">0</div></div>
+        <div class="stat"><div class="lab">Feil</div><div id="wBad" class="val">0</div></div>
+      </div>
+      <div class="keypad" id="wPad" style="margin-top:8px"></div>
+      <div class="grid2" style="margin-top:8px">
+        <button id="wPause" class="btn warn">Pause</button>
+        <button id="wStop" class="btn stop">Stopp</button>
+      </div>
+      <div id="wHint" class="muted" style="text-align:center;margin-top:6px"></div>
+    </div>
+
+    <!-- WSUM -->
+    <div id="wSummary" class="card" style="display:none">
+      <div class="pageH">Øktsammendrag</div>
+      <table>
+        <thead><tr><th>Tid</th><th>Modus</th><th>Familier</th><th class="right">✓</th><th class="right">✗</th><th class="right">s</th><th class="right">CPM</th></tr></thead>
+        <tbody id="wResBody"></tbody>
+      </table>
+      <div class="grid2" style="margin-top:8px">
+        <button id="wReplay" class="btn primary">Spill samme</button>
+        <button id="wHome" class="btn">Hjem</button>
+      </div>
+    </div>
   </div>
 
-  <!-- SUMMARY -->
-  <div id="summary" class="card" style="display:none">
-    <div class="pageH">Session summary</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <div style="font-weight:800">Results</div>
-      <div class="muted"><span id="summaryRounds">0</span> rounds</div>
+  <!-- ============ FLOW ROOT (adaptiv) ============ -->
+  <div id="flowRoot" style="display:none">
+    <h1>Adaptiv (Flyt) — husk nivået ditt!</h1>
+
+    <!-- FHOME -->
+    <div id="fHome" class="card">
+      <div class="pageH">Start</div>
+      <div class="muted" style="margin-bottom:6px">
+        Nivåkoder: <b>A5–A20</b> (summer) og <b>M2–M12</b> (tabeller). Tips: <i>Husk nivået ditt</i> (A7/M5) for rask start på ny enhet.
+      </div>
+      <div class="chips" id="fDomainChips" style="margin-bottom:8px">
+        <button class="chip active" data-domain="add">Pluss/Minus (A5–A20)</button>
+        <button class="chip" data-domain="mul">Gange/Deling (M2–M12)</button>
+      </div>
+      <div class="grid2" style="margin-bottom:8px">
+        <button id="fContinue" class="btn" disabled>Fortsett nivå</button>
+        <button id="fPlacement" class="btn primary">Start placement test</button>
+      </div>
+      <div class="row" style="gap:8px">
+        <input id="fLevelInput" placeholder="Skriv nivå (A7 eller M5)" class="btn" style="flex:1;background:#0b1223;border-radius:10px;border:1px solid #334155;font-weight:800" />
+        <button id="fJump" class="btn">Gå</button>
+      </div>
+      <div id="fLast" class="muted" style="margin-top:8px"></div>
+      <div class="grid2" style="margin-top:10px">
+        <button id="flowBackToLanding" class="btn">Til landing</button>
+      </div>
     </div>
-    <table>
-      <thead>
-        <tr><th>Time</th><th>Mode</th><th>Fams</th><th class="right">✓</th><th class="right">✗</th><th class="right">s</th><th class="right">CPM</th></tr>
-      </thead>
-      <tbody id="resBody"></tbody>
-    </table>
-    <div class="grid2" style="margin-top:8px">
-      <button id="replaySame" class="btn primary">Replay same</button>
-      <button id="newSetup" class="btn">New setup</button>
+
+    <!-- FPLACEMENT -->
+    <div id="fPlacementCard" class="card" style="display:none">
+      <div class="pageH">Placement test</div>
+      <div class="muted" id="plNote" style="margin-bottom:6px">Runde <b id="plIdx">1</b>/4 – 20 s</div>
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <div class="levelChip" id="plGroupName">—</div>
+        <div class="tbig" id="plTime">00:20</div>
+      </div>
+      <div class="progress" style="margin-bottom:8px"><div id="plBar" class="bar"></div></div>
+      <div class="stage"><div id="plEq" class="eq">Klar?</div></div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Riktige</div><div id="plOK" class="val">0</div></div>
+        <div class="stat"><div class="lab">Feil</div><div id="plBad" class="val">0</div></div>
+      </div>
+      <div class="keypad" id="plPad" style="margin-top:8px"></div>
+      <div class="grid2" style="margin-top:8px">
+        <button id="plPause" class="btn warn">Pause</button>
+        <button id="plAbort" class="btn stop">Avbryt</button>
+      </div>
+    </div>
+
+    <!-- FPLAY -->
+    <div id="fPlay" class="card" style="display:none">
+      <div class="pageH">Øv</div>
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <div class="row" style="gap:6px;align-items:center">
+          <span class="levelChip">Nivå <b id="fLevelCode">A7</b>
+            <button id="fLevelInfo" class="iconBtn" title="Hva betyr nivået?">?</button>
+          </span>
+          <span class="muted" id="fMixTag" style="display:none">Miksrunde</span>
+        </div>
+        <div class="tbig" id="fTimeLeft">00:30</div>
+      </div>
+      <div class="progress" style="margin-bottom:8px"><div id="fTimeBar" class="bar"></div></div>
+      <div class="stage"><div id="fEq" class="eq">Trykk for å starte</div></div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Riktige</div><div id="fOK" class="val">0</div></div>
+        <div class="stat"><div class="lab">Feil</div><div id="fBad" class="val">0</div></div>
+      </div>
+      <div class="keypad" id="fPad" style="margin-top:8px"></div>
+      <div class="grid2" style="margin-top:8px">
+        <button id="fPause" class="btn warn">Pause</button>
+        <button id="fStop" class="btn stop">Stopp</button>
+      </div>
+      <div id="fHint" class="muted" style="margin-top:6px">To runder på rad med flyt → neste nivå.</div>
+    </div>
+
+    <!-- FSUM -->
+    <div id="fSummary" class="card" style="display:none">
+      <div class="pageH">Øktsammendrag</div>
+      <table>
+        <thead><tr><th>Tid</th><th>Nivå</th><th>✓</th><th>✗</th><th class="right">s</th><th class="right">CPM</th><th>Flyt</th></tr></thead>
+        <tbody id="fResBody"></tbody>
+      </table>
+      <div class="grid2" style="margin-top:8px">
+        <button id="fContinueBtn" class="btn primary">Fortsett</button>
+        <button id="fHomeBtn" class="btn">Hjem</button>
+      </div>
     </div>
   </div>
+
 </div>
 
-<!-- ⚡ BIG CPM flash -->
+<!-- ⚡ BIG CPM flash shared -->
 <div id="roundPopup" aria-live="polite" aria-hidden="true">
   <div id="flashWrap" class="flash"><span class="bolt">⚡</span><span id="flashNum">0.0</span></div>
+</div>
+
+<!-- Tooltip backdrop -->
+<div id="tipBackdrop">
+  <div id="tipBox" role="dialog" aria-modal="true" aria-labelledby="tipTitle">
+    <h3 id="tipTitle">Nivå</h3>
+    <div id="tipContent">—</div>
+    <div class="mini">Trykk utenfor for å lukke</div>
+  </div>
 </div>
 
 <script>
 (function(){
 'use strict';
 
-/* ---------- Helpers ---------- */
+/* ---------- Shared helpers ---------- */
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-const fmtTime = s => { if(s===null) return '—'; s=Math.max(0,Math.ceil(s)); return `${pad(Math.floor(s/60))}:${pad(s%60)}`; };
+const fmtTime = s => { s=Math.max(0,Math.ceil(s)); return `${pad(Math.floor(s/60))}:${pad(s%60)}`; };
 const nowClock = ()=>{ const d=new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
 
-/* ---------- Families ---------- */
+/* ---------- Families (shared) ---------- */
 // Add: c=2..20, a<=b
 const F_ADD=[]; for(let c=2;c<=20;c++){ for(let a=1;a<=Math.floor(c/2);a++){ const b=c-a; F_ADD.push({a,b,c,id:`A:${a}-${b}-${c}`}); } }
 // Mul: a<=b<=12
 const F_MUL=[]; for(let a=1;a<=12;a++){ for(let b=a;b<=12;b++){ const c=a*b; F_MUL.push({a,b,c,id:`M:${a}-${b}-${c}`}); } }
 
-const MAP_ADD = new Map(F_ADD.map(f=>[f.id,f]));
-const MAP_MUL = new Map(F_MUL.map(f=>[f.id,f]));
-
-/* Four facts for preview */
-function previewLinesForFamily(f, mode){
-  if(mode==='add'){
-    return [
-      `${f.a}+${f.b}=${f.c}`,
-      `${f.b}+${f.a}=${f.c}`,
-      `${f.c}-${f.a}=${f.b}`,
-      `${f.c}-${f.b}=${f.a}`
-    ];
-  }else{
-    return [
-      `${f.a}×${f.b}=${f.c}`,
-      `${f.b}×${f.a}=${f.c}`,
-      `${f.c}÷${f.a}=${f.b}`,
-      `${f.c}÷${f.b}=${f.a}`
-    ];
-  }
-}
-
-/* ---------- State ---------- */
-let mode='add';
-let selAdd=new Set(), selMul=new Set();
-let duration=30;
-let totalRounds=3, roundIdx=0;
-
-let running=false, paused=false, waitingTap=false;
-let startMs=0, pauseMs=0, pauseStart=0, tick=null;
-let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0;
-
-const ERROR_LIMIT=3;
-const results=[];
-
-/* ---------- Navigation & headings ---------- */
-function show(id){
-  ['step1','step2','step3','play','summary'].forEach(x=>$(x).style.display='none');
-  $(id).style.display='';
-  // Big title only on first step
-  $('mainTitle').style.display = (id==='step1') ? '' : 'none';
-}
-function enableNextFamilies(){
-  const count = (mode==='add'?selAdd:selMul).size;
-  $('selCount').textContent = count;
-  $('s1Next').disabled = count===0;
-}
-
-/* ---------- Step 1: Families ---------- */
-function renderFamilies(){
-  const grid=$('famGrid'); grid.innerHTML='';
-  const list = mode==='add'?F_ADD:F_MUL;
-  const sel  = mode==='add'?selAdd:selMul;
-
-  const frag=document.createDocumentFragment();
-  list.forEach(f=>{
-    const lab=document.createElement('label');
-    lab.className='fam';
-    lab.innerHTML = `<input type="checkbox" data-id="${f.id}" ${sel.has(f.id)?'checked':''}><span>${f.a} ${f.b} ${f.c}</span>`;
-    frag.appendChild(lab);
-  });
-  grid.appendChild(frag);
-
-  grid.onchange = (e)=>{
-    const cb=e.target && e.target.matches && e.target.matches('input[type=checkbox]') ? e.target : null;
-    if(!cb) return;
-    const set = mode==='add'?selAdd:selMul;
-    if(cb.checked) set.add(cb.dataset.id); else set.delete(cb.dataset.id);
-    enableNextFamilies();
-  };
-
-  enableNextFamilies();
-}
-
-$('modeChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('modeChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  mode = b.dataset.mode;
-  renderFamilies();
-});
-
-$('selAll').addEventListener('click',()=>{
-  const set = mode==='add'?selAdd:selMul;
-  set.clear();
-  (mode==='add'?F_ADD:F_MUL).forEach(f=>set.add(f.id));
-  renderFamilies();
-});
-$('selNone').addEventListener('click',()=>{
-  const set = mode==='add'?selAdd:selMul;
-  set.clear();
-  renderFamilies();
-});
-$('s1Next').addEventListener('click',()=> show('step2'));
-
-/* ---------- Step 2: Duration ---------- */
-$('durChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('durChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  duration = Number(b.dataset.dur);
-});
-$('s2Back').addEventListener('click',()=> show('step1'));
-$('s2Next').addEventListener('click',()=> show('step3'));
-
-/* ---------- Step 3: Rounds ---------- */
-$('roundChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  [...$('roundChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  totalRounds = Number(b.dataset.r);
-});
-$('s3Back').addEventListener('click',()=> show('step2'));
-$('s3Start').addEventListener('click',()=>{
-  roundIdx = 0;
-  show('play');
-  startRoundSetup();
-});
-
-/* ---------- Utilities ---------- */
-function getChosenFamilies(){
-  const list = mode==='add'?F_ADD:F_MUL;
-  const sel  = mode==='add'?selAdd:selMul;
-  return list.filter(f=>sel.has(f.id));
-}
-
-/* ---------- Play: engine ---------- */
-function inputHTML(){ return `<input id="ans" class="numbox" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
-function setEq(item){
-  cur=item;
-  const [x,y,z]=item.pattern, op=item.op;
-  const miss=Math.floor(Math.random()*3);
-  $('eq').innerHTML = [
-    miss===0?inputHTML():`<span>${x}</span>`,
-    `<span>${op}</span>`,
-    miss===1?inputHTML():`<span>${y}</span>`,
-    `<span>=</span>`,
-    miss===2?inputHTML():`<span>${z}</span>`
-  ].join('');
-  sol=[x,y,z][miss];
-
-  const inp=$('ans'); if(inp){
-    const blockKeys = e => { if(['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault(); };
-    const blockWheel = e => e.preventDefault();
-    inp.addEventListener('keydown', blockKeys, {passive:false});
-    inp.addEventListener('wheel', blockWheel, {passive:false});
-    inp.addEventListener('input', ()=>{
-      inp.value = inp.value.replace(/\D+/g,'').slice(0,3);
-      onType();
-    });
-    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
-    inp.focus({preventScroll:true});
-  }
-}
-function mark(ok){
-  const inp=$('ans'); if(!inp) return;
-  inp.classList.remove('ok','err');
-  inp.classList.add(ok?'ok':'err');
-}
-function famItemsAdd(f){ return [
+const famItemsAdd=f=>[
   {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
   {op:'+', pattern:[f.b,f.a,f.c], fam:f.id},
   {op:'-', pattern:[f.c,f.a,f.b], fam:f.id},
   {op:'-', pattern:[f.c,f.b,f.a], fam:f.id},
-];}
-function famItemsMul(f){ return [
+];
+const famItemsMul=f=>[
   {op:'×', pattern:[f.a,f.b,f.c], fam:f.id},
   {op:'×', pattern:[f.b,f.a,f.c], fam:f.id},
   {op:'÷', pattern:[f.c,f.a,f.b], fam:f.id},
   {op:'÷', pattern:[f.c,f.b,f.a], fam:f.id},
-];}
-function buildQueue(){
-  const list = getChosenFamilies();
-  const items=[];
-  list.forEach(f=>items.push(...(mode==='add'?famItemsAdd(f):famItemsMul(f))));
-  shuffle(items);
-  return items;
-}
-function nextItem(){
-  if(idx>=q.length){ q=q.concat(buildQueue()); if(q.length===0){ finishRound('empty'); return; } }
-  setEq(q[idx]); hud();
-}
-function onType(){
-  if(!running || paused) return;
-  const inp=$('ans'); if(!inp) return;
-  const v=inp.value.trim(); if(v==='') return;
-  const need=String(sol).length;
-  if(v.length>=need || +v===sol){ submit(); }
-}
-function submit(){
-  if(!running||paused) return;
-  const v=$('ans')?.value?.trim(); if(v==='') return;
-  const ok=(+v===sol);
-  if(ok){
-    correct++; mark(true); idx++; setTimeout(nextItem,70); hud(); return;
-  }
-  wrong++; mark(false);
-  if(wrong>ERROR_LIMIT){ idx++; finishRound('errors'); return; }
-  q.splice(idx+1,0,cur); // small penalty
-  idx++; setTimeout(nextItem,70); hud();
-}
+];
 
-/* ---------- Round setup & start ---------- */
-function renderPreviewBlocks(){
-  const chosen = getChosenFamilies();
-  if(!chosen.length){
-    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">No families selected</span>`;
-    return;
+/* ---------- Navigation between roots ---------- */
+$('openWizardBtn').addEventListener('click',()=>{ $('landing').style.display='none'; $('wizardRoot').style.display=''; });
+$('openFlowBtn').addEventListener('click',()=>{ $('landing').style.display='none'; $('flowRoot').style.display=''; });
+$('flowBackToLanding').addEventListener('click',()=>{ $('flowRoot').style.display='none'; $('landing').style.display=''; });
+$('wHome').addEventListener('click',()=>{ $('wizardRoot').style.display='none'; $('landing').style.display=''; });
+$('fHomeBtn').addEventListener('click',()=>{ showFlow('fHome'); });
+
+/* =========================================================
+   WIZARD (page-by-page, som tidligere – kort og kompakt)
+   ========================================================= */
+let wMode='add', wSelAdd=new Set(), wSelMul=new Set(), wDur=30, wRounds=3, wIdx=0;
+let wRunning=false, wPaused=false, wWaitingTap=false, wStart=0, wPauseMs=0, wTick=null;
+let wOK=0, wBad=0, wQ=[], wI=0, wSol=0, wCur=null;
+let wResults=[];
+
+function showWizard(id){
+  ['wStep1','wStep2','wStep3','wPlay','wSummary'].forEach(x=>$(x).style.display='none');
+  $(id).style.display='';
+  $('wMainTitle').style.display = (id==='wStep1') ? '' : 'none';
+}
+function wEnableNext(){
+  const set = (wMode==='add'?wSelAdd:wSelMul);
+  $('wSelCount').textContent=set.size;
+  $('w1Next').disabled = set.size===0;
+}
+function wRenderFams(){
+  const grid=$('wFamGrid'); grid.innerHTML='';
+  const list = (wMode==='add'?F_ADD:F_MUL);
+  const set  = (wMode==='add'?wSelAdd:wSelMul);
+  const frag=document.createDocumentFragment();
+  list.forEach(f=>{
+    const lab=document.createElement('label'); lab.className='fam';
+    lab.innerHTML=`<input type="checkbox" data-id="${f.id}" ${set.has(f.id)?'checked':''}><span>${f.a} ${f.b} ${f.c}</span>`;
+    frag.appendChild(lab);
+  });
+  grid.appendChild(frag);
+  grid.onchange = e=>{
+    const cb=e.target?.matches?.('input[type=checkbox]')?e.target:null; if(!cb) return;
+    if(cb.checked) set.add(cb.dataset.id); else set.delete(cb.dataset.id);
+    wEnableNext();
+  };
+  wEnableNext();
+}
+$('wModeChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('wModeChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); wMode=b.dataset.mode; wRenderFams();
+});
+$('wSelAll').addEventListener('click',()=>{ const set=(wMode==='add'?wSelAdd:wSelMul); set.clear(); (wMode==='add'?F_ADD:F_MUL).forEach(f=>set.add(f.id)); wRenderFams(); });
+$('wSelNone').addEventListener('click',()=>{ (wMode==='add'?wSelAdd:wSelMul).clear(); wRenderFams(); });
+$('w1Next').addEventListener('click',()=>showWizard('wStep2'));
+
+$('wDurChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('wDurChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); wDur=+b.dataset.dur;
+});
+$('w2Back').addEventListener('click',()=>showWizard('wStep1'));
+$('w2Next').addEventListener('click',()=>showWizard('wStep3'));
+
+$('wRoundChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('wRoundChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); wRounds=+b.dataset.r;
+});
+$('w3Back').addEventListener('click',()=>showWizard('wStep2'));
+$('w3Start').addEventListener('click',()=>{ wIdx=0; showWizard('wPlay'); wStartSetup(); });
+
+function wChosen(){ const list=(wMode==='add'?F_ADD:F_MUL); const set=(wMode==='add'?wSelAdd:wSelMul); return list.filter(f=>set.has(f.id)); }
+function wItemsAdd(f){ return famItemsAdd(f); }
+function wItemsMul(f){ return famItemsMul(f); }
+function wBuildQueue(){
+  const items=[]; wChosen().forEach(f=>items.push(...(wMode==='add'?wItemsAdd(f):wItemsMul(f))));
+  return shuffle(items);
+}
+function wInput(){ return `<input id="wAns" class="numbox" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
+function wSetEq(it){
+  wCur=it; const [x,y,z]=it.pattern, op=it.op; const miss=Math.floor(Math.random()*3);
+  $('wEq').innerHTML = [miss===0?wInput():`<span>${x}</span>`,`<span>${op}</span>`,miss===1?wInput():`<span>${y}</span>`,`<span>=</span>`,miss===2?wInput():`<span>${z}</span>`].join('');
+  wSol=[x,y,z][miss];
+  const inp=$('wAns'); if(inp){
+    const bk=e=>{ if(['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault(); };
+    const wh=e=>e.preventDefault();
+    inp.addEventListener('keydown',bk,{passive:false}); inp.addEventListener('wheel',wh,{passive:false});
+    inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D+/g,'').slice(0,3); wOnType(); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); wSubmit(); }});
+    inp.focus({preventScroll:true});
   }
-  const toShow = chosen.length <= 3 ? chosen : [chosen[0]]; // up to 3 families
+}
+function wOnType(){ if(!wRunning||wPaused) return; const v=$('wAns')?.value?.trim(); if(!v) return; if(v.length>=String(wSol).length || +v===wSol) wSubmit(); }
+function wSubmit(){
+  if(!wRunning||wPaused) return;
+  const v=$('wAns')?.value?.trim(); if(!v) return;
+  if(+v===wSol){ wOK++; $('wOK').textContent=String(wOK); wI++; setTimeout(wNext,70); }
+  else{ wBad++; $('wBad').textContent=String(wBad); if(wBad>3){ wI++; wFinish('errors'); return; } wQ.splice(wI+1,0,wCur); wI++; setTimeout(wNext,70); }
+}
+function wNext(){ if(wI>=wQ.length){ wQ=wQ.concat(wBuildQueue()); if(!wQ.length){ wFinish('empty'); return;} } wSetEq(wQ[wI]); wHud(); }
+function wHud(){
+  const e = ((wPaused?Date.now():Date.now())-wStart - wPauseMs)/1000; // simplified
+  const left = Math.max(0, wDur - ((Date.now()-wStart - wPauseMs)/1000));
+  $('wTimeLeft').textContent = fmtTime(left);
+  const prog = Math.max(0,Math.min(100, ((wDur-left)/wDur)*100));
+  $('wTimeBar').style.width = prog + '%';
+}
+function wPreviewBlock(){
+  const chosen=wChosen();
+  const toShow = chosen.length<=3 ? chosen : [chosen[0]];
   const blocks = toShow.map(f=>{
-    const lines = previewLinesForFamily(f, mode);
-    return `<div class="pv-block">
-              <div class="pv-title">Family: ${f.a} ${f.b} ${f.c}</div>
-              ${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}
-            </div>`;
+    const lines = (wMode==='add'
+      ? [`${f.a}+${f.b}=${f.c}`,`${f.b}+${f.a}=${f.c}`,`${f.c}-${f.a}=${f.b}`,`${f.c}-${f.b}=${f.a}`]
+      : [`${f.a}×${f.b}=${f.c}`,`${f.b}×${f.a}=${f.c}`,`${f.c}÷${f.a}=${f.b}`,`${f.c}÷${f.b}=${f.a}`]);
+    return `<div class="pv-block"><div class="pv-title">Familie: ${f.a} ${f.b} ${f.c}</div>${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}</div>`;
   }).join('');
-  $('eq').innerHTML = `<div class="pv">
-      ${blocks}
-      <button id="tapToStartBtn" class="btn primary big" style="margin-top:8px">Tap to begin</button>
-    </div>`;
-  $('tapToStartBtn').addEventListener('click', startTimedRound, {once:true});
-  document.addEventListener('keydown', onEnterStart, {once:true});
+  $('wEq').innerHTML = `<div class="pv">${blocks}<button id="wTap" class="btn primary big" style="margin-top:8px">Trykk for å starte</button></div>`;
+  $('wTap').addEventListener('click', wStartTimed, {once:true});
+  document.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); wStartTimed(); } }, {once:true});
 }
-function onEnterStart(e){ if(e.key==='Enter'){ e.preventDefault(); startTimedRound(); } }
-
-function startRoundSetup(){
-  $('roundIdx').textContent = String(roundIdx+1);
-  $('roundTotal').textContent = String(totalRounds);
-  $('correct').textContent='0'; $('wrong').textContent='0';
-  $('feedback').textContent='';
-  $('timeBar').style.width='0%';
-  $('timeLeft').textContent = fmtTime(duration);
-
-  q = buildQueue();
-  if(q.length===0){ finishRound('empty'); return; }
-
-  if(roundIdx === 0){
-    // First round: show preview and wait for tap
-    waitingTap = true;
-    renderPreviewBlocks();
-  }else{
-    // Subsequent rounds: start immediately (no preview)
-    waitingTap = false;
-    $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Get ready…</span>`;
-    setTimeout(startTimedRound, 300);
-  }
+function wStartSetup(){
+  $('wRoundIdx').textContent=String(wIdx+1); $('wRoundTotal').textContent=String(wRounds);
+  wOK=0; wBad=0; $('wOK').textContent='0'; $('wBad').textContent='0';
+  $('wTimeBar').style.width='0%'; $('wTimeLeft').textContent=fmtTime(wDur);
+  wQ = wBuildQueue(); wI=0;
+  if(!wQ.length){ wFinish('empty'); return; }
+  if(wIdx===0){ wWaitingTap=true; wPreviewBlock(); } else { wWaitingTap=false; $('wEq').innerHTML=`<span style="font-size:18px;opacity:.9">Klar…</span>`; setTimeout(wStartTimed,300); }
 }
-
-function startTimedRound(){
-  if(roundIdx===0 && !waitingTap){ return; } // guard for accidental double-start on first round
-  waitingTap = false;
-  running=true; paused=false; correct=0; wrong=0; idx=0;
-  startMs=Date.now(); pauseMs=0; pauseStart=0;
-  setEq(q[idx]); // first problem
-  if(tick) clearInterval(tick);
-  tick=setInterval(()=>{
-    if(!running||paused) return;
-    hud();
-    const e=elapsed();
-    if(e>=duration){ finishRound('time'); }
-  },100);
+function wStartTimed(){
+  wWaitingTap=false; wRunning=true; wPaused=false; wStart=Date.now(); wPauseMs=0;
+  wSetEq(wQ[wI]);
+  if(wTick) clearInterval(wTick);
+  wTick=setInterval(()=>{ if(!wRunning||wPaused) return; wHud(); const e=((Date.now()-wStart)-wPauseMs)/1000; if(e>=wDur){ wFinish('time'); } },100);
 }
-
-/* ---------- HUD ---------- */
-function elapsed(){ return ((paused?pauseStart:Date.now())-startMs - pauseMs)/1000; }
-function hud(){
-  const e=elapsed();
-  $('correct').textContent = String(correct);
-  $('wrong').textContent   = String(wrong);
-
-  const left = Math.max(0, duration - e);
-  $('timeLeft').textContent = fmtTime(left);
-  const prog = Math.max(0, Math.min(100, (e/duration)*100));
-  $('timeBar').style.width = prog + '%';
+function wShowFlash(cpm, err){ const pop=$('roundPopup'), wrap=$('flashWrap'); $('flashNum').textContent=isFinite(cpm)?cpm.toFixed(1):'0.0'; wrap.classList.toggle('err',!!err); wrap.style.animation='none'; void wrap.offsetHeight; wrap.style.animation=''; pop.style.display='grid'; pop.setAttribute('aria-hidden','false'); setTimeout(()=>{ pop.style.display='none'; pop.setAttribute('aria-hidden','true'); },1300); }
+function wFinish(why){
+  const was=wRunning; wRunning=false; if(wTick) clearInterval(wTick);
+  const e=((Date.now()-wStart)-wPauseMs)/1000; const cpm = e>0 ? (wOK/(e/60)) : 0;
+  if(was){ $('wHint').textContent = (why==='errors')?'Runden stoppet pga. feil.':'Runde ferdig.'; }
+  wResults.push({t:nowClock(), mode:(wMode==='add'?'A/S':'M/D'), fams:wFamLabelUsed(), ok:wOK, bad:wBad, dur:wDur, cpm:+(isFinite(cpm)?cpm.toFixed(1):'0')});
+  wRenderSummary();
+  wShowFlash(cpm, why==='errors');
+  wIdx++;
+  if(wIdx<wRounds){ setTimeout(wStartSetup,900); } else { setTimeout(()=>showWizard('wSummary'),700); }
+  $('wEq').innerHTML=`<span style="font-size:18px;opacity:.9">Runde ferdig</span>`;
 }
-
-/* ---------- BIG ⚡ flash after each round ---------- */
-function showRoundFlash(cpm, endedByErrors){
-  const pop = $('roundPopup');
-  const wrap = $('flashWrap');
-  $('flashNum').textContent = (isFinite(cpm)?cpm.toFixed(1):'0.0');
-  wrap.classList.toggle('err', !!endedByErrors);
-
-  // Restart the pop animation cleanly
-  wrap.style.animation = 'none';
-  // force reflow
-  void wrap.offsetHeight;
-  wrap.style.animation = '';
-
-  pop.style.display = 'grid';
-  pop.setAttribute('aria-hidden','false');
-
-  setTimeout(()=>{
-    pop.style.display = 'none';
-    pop.setAttribute('aria-hidden','true');
-  }, 1300);
+function wFamLabelUsed(){
+  const used=new Set(); for(let i=0;i<wI;i++){ const it=wQ[i]; if(it?.fam) used.add(it.fam); }
+  return [...used].map(id=>id.slice(2).split('-').join(' ')).join(' | ');
 }
-
-/* ---------- Finish ---------- */
-function famLabel(id){ return id.slice(2).split('-').join(' '); }
-function finishRound(why){
-  const wasRunning = running;
-  running=false; if(tick) clearInterval(tick);
-
-  const e=elapsed();
-  const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
-  const fams=[...used].map(famLabel).join(' | ');
-  const cpm = e>0? (correct/(e/60)) : 0;
-
-  if(why==='errors'){
-    $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}).</span>`;
-  }else if(why==='empty'){
-    $('feedback').innerHTML = `<span class="bad">No families selected.</span>`;
-  }else if(wasRunning){
-    $('feedback').innerHTML = `<span class="good">Done</span>`;
-  }
-
-  results.push({
-    t: nowClock(),
-    mode: mode==='add'?'A/S':'M/D',
-    fams,
-    correct, wrong,
-    dur: duration,
-    cpm: +(isFinite(cpm)?cpm.toFixed(1):'0'),
-    why
-  });
-
-  // BIG ⚡ flash
-  showRoundFlash(cpm, why==='errors');
-
-  // next or summary
-  roundIdx++;
-  if(roundIdx < totalRounds){
-    setTimeout(startRoundSetup, 900);
-  }else{
-    setTimeout(()=>{ renderSummary(); show('summary'); }, 700);
-  }
-
-  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Round complete</span>`;
+function wRenderSummary(){
+  $('wResBody').innerHTML = wResults.map(r=>`<tr><td>${r.t}</td><td>${r.mode}</td><td>${r.fams||'—'}</td><td class="right">${r.ok}</td><td class="right">${r.bad}</td><td class="right">${r.dur}</td><td class="right">${r.cpm.toFixed(1)}</td></tr>`).join('');
 }
+$('wReplay').addEventListener('click',()=>{ wIdx=0; wResults.length=0; showWizard('wPlay'); wStartSetup(); });
 
-/* ---------- Play controls ---------- */
-$('pauseBtn').addEventListener('click',()=>{
-  if(!running) return;
-  if(!paused){ paused=true; pauseStart=Date.now(); $('feedback').textContent='Paused'; }
-  else{ paused=false; pauseMs += Date.now()-pauseStart; pauseStart=0; $('feedback').textContent=''; }
-});
-$('stopBtn').addEventListener('click',()=>{
-  if(!running) return;
-  finishRound('manual');
-});
-
-/* ---------- Keypad ---------- */
-(function buildPad(){
-  const keys=['1','2','3','4','5','6','7','8','9','0','⌫','OK'];
-  const pad=$('keypad'); pad.innerHTML='';
-  keys.forEach(k=>{
-    const b=document.createElement('button');
-    b.type='button'; b.className='key'; b.textContent=k; b.dataset.key=k;
-    pad.appendChild(b);
-  });
+/* Build keypad for wizard */
+(function buildWPad(){
+  const pad=$('wPad'); const keys=['1','2','3','4','5','6','7','8','9','0','⌫','OK'];
+  pad.innerHTML=''; keys.forEach(k=>{ const b=document.createElement('button'); b.className='key'; b.textContent=k; b.dataset.key=k; pad.appendChild(b); });
   pad.addEventListener('click',e=>{
-    const btn=e.target.closest('.key'); if(!btn||!running||paused) return;
-    const k=btn.dataset.key; const inp=$('ans'); if(!inp) return;
-    if(k==='OK'){ submit(); return; }
-    if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); onType(); return; }
-    if(/\d/.test(k)){ inp.value=((inp.value||'')+k).slice(0,3); onType(); }
+    const btn=e.target.closest('.key'); if(!btn||!wRunning||wPaused) return;
+    const k=btn.dataset.key; const inp=$('wAns'); if(!inp) return;
+    if(k==='OK'){ wSubmit(); return; }
+    if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); wOnType(); return; }
+    if(/\d/.test(k)){ inp.value=((inp.value||'')+k).slice(0,3); wOnType(); }
   });
 })();
 
-/* ---------- Summary ---------- */
-function renderSummary(){
-  $('summaryRounds').textContent = String(results.length);
-  const body=$('resBody');
-  body.innerHTML = results.map(r=>`
-    <tr>
-      <td>${r.t}</td>
-      <td>${r.mode}</td>
-      <td>${r.fams||'—'}</td>
-      <td class="right">${r.correct}</td>
-      <td class="right">${r.wrong}</td>
-      <td class="right">${r.dur}</td>
-      <td class="right">${r.cpm.toFixed(1)}</td>
-    </tr>`).join('');
-}
-$('replaySame').addEventListener('click',()=>{
-  roundIdx=0;
-  results.length = 0;
-  show('play');
-  startRoundSetup();
-});
-$('newSetup').addEventListener('click',()=>{
-  results.length = 0;
-  show('step1');
-});
+/* Init wizard */
+(function initWizard(){ wRenderFams(); showWizard('wStep1'); })();
 
-/* ---------- Init ---------- */
-function init(){
-  renderFamilies();
-  show('step1');
+/* =========================================================
+   FLOW (adaptiv)
+   ========================================================= */
+const FLOW_KEY='ff_v2_flow_progress_v1';
+let flow={ domain:'add', placementDone:false, currentLevel:null, streak:0, mastered:[], mixWith:null, mixPending:false, lastCpm:0 };
+function loadFlow(){ try{ const raw=localStorage.getItem(FLOW_KEY); if(raw) flow=Object.assign(flow, JSON.parse(raw)); }catch(e){} }
+function saveFlow(){ try{ localStorage.setItem(FLOW_KEY, JSON.stringify(flow)); }catch(e){} }
+function showFlow(id){ ['fHome','fPlacementCard','fPlay','fSummary'].forEach(x=>$(x).style.display='none'); $(id).style.display=''; }
+
+/* Landing→Flow buttons already wired above */
+
+function updateFlowHome(){
+  const has = flow.currentLevel && flow.currentLevel.startsWith(flow.domain==='add'?'A':'M');
+  $('fContinue').disabled = !has;
+  $('fLast').textContent = has ? `Sist lagret nivå: ${flow.currentLevel}` : '';
+  $('fLevelInput').placeholder = flow.domain==='add' ? 'Skriv nivå (A5…A20)' : 'Skriv nivå (M2…M12)';
 }
-document.addEventListener('DOMContentLoaded', init);
+$('fDomainChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  [...$('fDomainChips').querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); flow.domain=b.dataset.domain; saveFlow(); updateFlowHome();
+});
+$('fContinue').addEventListener('click',()=>{ if(!flow.currentLevel) return; startLevel(flow.currentLevel,true); });
+$('fJump').addEventListener('click',()=>{
+  const code = ($('fLevelInput').value||'').trim().toUpperCase();
+  if(!validateLevelCode(code)){ alert('Ugyldig nivå. Bruk A5–A20 eller M2–M12.'); return; }
+  flow.currentLevel=code; flow.domain = code.startsWith('A')?'add':'mul'; flow.placementDone=true; flow.streak=0; flow.mixWith=null; flow.mixPending=false; saveFlow(); startLevel(flow.currentLevel,true);
+});
+$('fPlacement').addEventListener('click',()=>{ fResults=[]; renderFlowSummary(); startPlacement(); });
+
+function validateLevelCode(code){
+  if(/^A(1?\d|20)$/.test(code)){ const n=+code.slice(1); return n>=5 && n<=20; }
+  if(/^M(1?\d|12)$/.test(code)){ const n=+code.slice(1); return n>=2 && n<=12; }
+  return false;
+}
+
+/* Placement test */
+const PL_ADD = [
+  {label:'Summer 2–6', sums:[2,3,4,5,6]},
+  {label:'Summer 7–10', sums:[7,8,9,10]},
+  {label:'Summer 11–15', sums:[11,12,13,14,15]},
+  {label:'Summer 16–20', sums:[16,17,18,19,20]},
+];
+const PL_MUL = [
+  {label:'2–4-gangen', factors:[2,3,4]},
+  {label:'5–7-gangen', factors:[5,6,7]},
+  {label:'8–9-gangen', factors:[8,9]},
+  {label:'10–12-gangen', factors:[10,11,12]},
+];
+
+let plIdx=0, plDur=20, plRun=false, plPaused=false, plStart=0, plPauseMs=0, plTick=null;
+let plOK=0, plBad=0, plQ=[], plI=0, plSol=0, plCur=null, plStats={};
+
+function plInput(){ return `<input id="plAns" class="numbox" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
+function plSetEq(it){
+  plCur=it; const [x,y,z]=it.pattern, op=it.op; const miss=Math.floor(Math.random()*3);
+  $('plEq').innerHTML = [miss===0?plInput():`<span>${x}</span>`,`<span>${op}</span>`,miss===1?plInput():`<span>${y}</span>`,`<span>=</span>`,miss===2?plInput():`<span>${z}</span>`].join('');
+  plSol=[x,y,z][miss];
+  const inp=$('plAns'); if(inp){
+    const bk=e=>{ if(['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault(); };
+    const wh=e=>e.preventDefault();
+    inp.addEventListener('keydown',bk,{passive:false}); inp.addEventListener('wheel',wh,{passive:false});
+    inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D+/g,'').slice(0,3); plOnType(); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); plSubmit(); }});
+    inp.focus({preventScroll:true});
+  }
+}
+function buildPlacementQueue(){
+  const list = (flow.domain==='add')?F_ADD:F_MUL;
+  const g = (flow.domain==='add')?PL_ADD[plIdx]:PL_MUL[plIdx];
+  const fams = (flow.domain==='add')
+    ? list.filter(f=>g.sums.includes(f.c))
+    : list.filter(f=>g.factors.includes(f.a)||g.factors.includes(f.b));
+  const items=[]; fams.forEach(f=>items.push(...(flow.domain==='add'?famItemsAdd(f):famItemsMul(f))));
+  shuffle(items);
+  return items.slice(0,200);
+}
+function plOnType(){ if(!plRun||plPaused) return; const v=$('plAns')?.value?.trim(); if(!v) return; if(v.length>=String(plSol).length || +v===plSol) plSubmit(); }
+function plSubmit(){
+  if(!plRun||plPaused) return;
+  const v=$('plAns')?.value?.trim(); if(!v) return;
+  const ok=(+v===plSol);
+  if(ok){ plOK++; $('plOK').textContent=String(plOK); } else { plBad++; $('plBad').textContent=String(plBad); }
+  // per key (sum/table)
+  const key = (flow.domain==='add') ? String(plCur.pattern[2]) : (plCur.pattern[0]===plCur.pattern[1] ? plCur.pattern[0] : (plCur.pattern[0] < plCur.pattern[1] ? plCur.pattern[0] : plCur.pattern[1]));
+  if(!plStats[key]) plStats[key]={ok:0,bad:0}; if(ok) plStats[key].ok++; else plStats[key].bad++;
+  plI++; if(plI>=plQ.length){ plQ=plQ.concat(buildPlacementQueue()); } plSetEq(plQ[plI]);
+}
+function startPlacement(){
+  showFlow('fPlacementCard'); plIdx=0; plStats={}; startPlacementRound();
+}
+function startPlacementRound(){
+  plOK=0; plBad=0; $('plOK').textContent='0'; $('plBad').textContent='0';
+  $('plIdx').textContent=String(plIdx+1);
+  const g=(flow.domain==='add')?PL_ADD[plIdx]:PL_MUL[plIdx];
+  $('plGroupName').textContent=g.label; $('plTime').textContent=fmtTime(plDur); $('plBar').style.width='0%';
+  plQ = buildPlacementQueue(); plI=0; plSetEq(plQ[plI]);
+  plRun=true; plPaused=false; plStart=Date.now(); plPauseMs=0;
+  if(plTick) clearInterval(plTick);
+  plTick=setInterval(()=>{ if(!plRun||plPaused) return; const e=((Date.now()-plStart)-plPauseMs)/1000; const left=Math.max(0,plDur-e); $('plTime').textContent=fmtTime(left); $('plBar').style.width=Math.min(100,(e/plDur)*100)+'%'; if(e>=plDur){ finishPlacementRound(); } },100);
+}
+function finishPlacementRound(){
+  plRun=false; if(plTick) clearInterval(plTick);
+  plIdx++; if(plIdx<4){ startPlacementRound(); } else {
+    const startCode = placementToStartLevel();
+    flow.currentLevel=startCode; flow.placementDone=true; flow.streak=0; flow.mixWith=null; flow.mixPending=false; saveFlow();
+    startLevel(startCode,true);
+  }
+}
+$('plPause').addEventListener('click',()=>{ if(!plRun) return; plPaused=!plPaused; $('plPause').textContent=plPaused?'Fortsett':'Pause'; if(!plPaused){ /* nothing extra */ } });
+$('plAbort').addEventListener('click',()=>{ plRun=false; if(plTick) clearInterval(plTick); showFlow('fHome'); });
+
+function placementToStartLevel(){
+  const entries = Object.entries(plStats).map(([k,v])=>{
+    const ok=v.ok||0, bad=v.bad||0, attempts=ok+bad, cpm=attempts*(60/plDur), score=cpm - 5*bad;
+    return {key:+k, ok, bad, attempts, cpm, score};
+  });
+  if(!entries.length) return flow.domain==='add'?'A7':'M5';
+  let cand = entries.filter(e=>e.bad<=1); if(!cand.length) cand=entries;
+  cand.sort((a,b)=> b.cpm - a.cpm || b.score - a.score);
+  const best=cand[0];
+  if(flow.domain==='add'){ let c=best.key; if(best.cpm>=28 && best.bad===0) c=Math.min(20,c+1); return 'A'+Math.max(5,Math.min(20,c)); }
+  else { let t=best.key; if(best.cpm>=20 && best.bad===0) t=Math.min(12,t+1); return 'M'+Math.max(2,Math.min(12,t)); }
+}
+
+/* Flow gameplay */
+const F_ROUND=30, F_ERRLIM=3;
+let fRun=false, fPaused=false, fWaitTap=false, fStart=0, fPauseMs=0, fTick=null;
+let fOK=0, fBad=0, fQ=[], fI=0, fSol=0, fCur=null;
+let fResults=[];
+
+function fInput(){ return `<input id="fAns" class="numbox" inputmode="numeric" autocomplete="off" pattern="[0-9]*">`; }
+function fSetEq(it){
+  fCur=it; const [x,y,z]=it.pattern, op=it.op; const miss=Math.floor(Math.random()*3);
+  $('fEq').innerHTML=[miss===0?fInput():`<span>${x}</span>`,`<span>${op}</span>`,miss===1?fInput():`<span>${y}</span>`,`<span>=</span>`,miss===2?fInput():`<span>${z}</span>`].join('');
+  fSol=[x,y,z][miss];
+  const inp=$('fAns'); if(inp){
+    const bk=e=>{ if(['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault(); };
+    const wh=e=>e.preventDefault();
+    inp.addEventListener('keydown',bk,{passive:false}); inp.addEventListener('wheel',wh,{passive:false});
+    inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D+/g,'').slice(0,3); fOnType(); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fSubmit(); }});
+    inp.focus({preventScroll:true});
+  }
+}
+function buildQueueForLevel(code, mixWith=null){
+  const items=[];
+  if(code.startsWith('A')){
+    const c=+code.slice(1);
+    const fams=F_ADD.filter(f=>f.c===c); fams.forEach(f=>items.push(...famItemsAdd(f)));
+    if(mixWith){ const cm=+mixWith.slice(1); const fams2=F_ADD.filter(f=>f.c===cm); const items2=[]; fams2.forEach(f=>items2.push(...famItemsAdd(f)));
+      const blend=[]; const a=items.length, b=items2.length, L=Math.max(a,b);
+      for(let i=0;i<L;i++){ if(i<a) blend.push(items[i]); if(i<b) blend.push(items2[i]); }
+      return shuffle(blend);
+    }
+    return shuffle(items);
+  }else{
+    const t=+code.slice(1);
+    const fams=F_MUL.filter(f=>f.a===t||f.b===t); fams.forEach(f=>items.push(...famItemsMul(f)));
+    if(mixWith){ const tm=+mixWith.slice(1); const fams2=F_MUL.filter(f=>f.a===tm||f.b===tm); const items2=[]; fams2.forEach(f=>items2.push(...famItemsMul(f)));
+      const blend=[]; const a=items.length, b=items2.length, L=Math.max(a,b);
+      for(let i=0;i<L;i++){ if(i<a) blend.push(items[i]); if(i<b) blend.push(items2[i]); }
+      return shuffle(blend);
+    }
+    return shuffle(items);
+  }
+}
+function fOnType(){ if(!fRun||fPaused) return; const v=$('fAns')?.value?.trim(); if(!v) return; if(v.length>=String(fSol).length || +v===fSol) fSubmit(); }
+function fSubmit(){
+  if(!fRun||fPaused) return;
+  const v=$('fAns')?.value?.trim(); if(!v) return;
+  if(+v===fSol){ fOK++; $('fOK').textContent=String(fOK); fI++; setTimeout(fNext,70); }
+  else{ fBad++; $('fBad').textContent=String(fBad); if(fBad>F_ERRLIM){ fI++; fFinish('errors'); return; } fQ.splice(fI+1,0,fCur); fI++; setTimeout(fNext,70); }
+}
+function fNext(){ if(fI>=fQ.length){ fQ=fQ.concat(fQ); } fSetEq(fQ[fI]); fHud(); }
+function fHud(){
+  const e=((Date.now()-fStart)-fPauseMs)/1000; const left=Math.max(0, F_ROUND-e);
+  $('fTimeLeft').textContent=fmtTime(left); $('fTimeBar').style.width=Math.max(0,Math.min(100,(e/F_ROUND)*100))+'%';
+}
+function previewLinesForFamily(f, dom){
+  if(dom==='add') return [`${f.a}+${f.b}=${f.c}`,`${f.b}+${f.a}=${f.c}`,`${f.c}-${f.a}=${f.b}`,`${f.c}-${f.b}=${f.a}`];
+  return [`${f.a}×${f.b}=${f.c}`,`${f.b}×${f.a}=${f.c}`,`${f.c}÷${f.a}=${f.b}`,`${f.c}÷${f.b}=${f.a}`];
+}
+function renderPreviewForLevel(code){
+  const dom = code.startsWith('A')?'add':'mul';
+  const block=document.createElement('div'); block.className='pv';
+  if(dom==='add'){
+    const c=+code.slice(1); const fam=F_ADD.find(f=>f.c===c);
+    const lines = previewLinesForFamily(fam,'add');
+    block.innerHTML=`<div class="pv-block"><div class="pv-title">Fakta for Sum ${c}</div>${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}</div><button id="fTap" class="btn primary big" style="margin-top:8px">Trykk for å starte</button>`;
+  }else{
+    const t=+code.slice(1); const fam=F_MUL.find(f=>f.a===t||f.b===t);
+    const lines = previewLinesForFamily(fam,'mul');
+    block.innerHTML=`<div class="pv-block"><div class="pv-title">${t}-gangen</div>${lines.map(l=>`<div class="pv-line">${l}</div>`).join('')}</div><button id="fTap" class="btn primary big" style="margin-top:8px">Trykk for å starte</button>`;
+  }
+  $('fEq').innerHTML=''; $('fEq').appendChild(block);
+  $('fTap').addEventListener('click', fStartTimed, {once:true});
+  document.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); fStartTimed(); } }, {once:true});
+}
+function startLevel(code, preview){
+  showFlow('fPlay'); $('fLevelCode').textContent=code; $('fMixTag').style.display=flow.mixPending?'':'none';
+  $('fOK').textContent='0'; $('fBad').textContent='0'; $('fTimeBar').style.width='0%'; $('fTimeLeft').textContent=fmtTime(F_ROUND);
+  fQ = buildQueueForLevel(code, flow.mixPending?flow.mixWith:null); fI=0;
+  if(preview && !flow.mixPending){ fWaitTap=true; renderPreviewForLevel(code); } else { fWaitTap=false; $('fEq').innerHTML=`<span style="font-size:18px;opacity:.9">Klar…</span>`; setTimeout(fStartTimed,300); }
+}
+function fStartTimed(){
+  fWaitTap=false; fRun=true; fPaused=false; fStart=Date.now(); fPauseMs=0; fOK=0; fBad=0;
+  fSetEq(fQ[fI]);
+  if(fTick) clearInterval(fTick);
+  fTick=setInterval(()=>{ if(!fRun||fPaused) return; fHud(); const e=((Date.now()-fStart)-fPauseMs)/1000; if(e>=F_ROUND){ fFinish('time'); } },100);
+}
+function cpmThreshold(code){
+  if(code.startsWith('A')){ const c=+code.slice(1); return (c<=10)?24:20; }
+  const t=+code.slice(1); if(t<=5) return 18; if(t<=8) return 16; return 14;
+}
+function passedFlow(code, cpm, errors){ return cpm>=cpmThreshold(code) && errors<=1; }
+function showFlash(cpm, err){ const pop=$('roundPopup'), wrap=$('flashWrap'); $('flashNum').textContent=(isFinite(cpm)?cpm.toFixed(1):'0.0'); wrap.classList.toggle('err',!!err); wrap.style.animation='none'; void wrap.offsetHeight; wrap.style.animation=''; pop.style.display='grid'; pop.setAttribute('aria-hidden','false'); setTimeout(()=>{ pop.style.display='none'; pop.setAttribute('aria-hidden','true'); },1300); }
+function nextLevel(code){ if(code.startsWith('A')){ const c=+code.slice(1); return 'A'+Math.min(20,c+1); } const t=+code.slice(1); return 'M'+Math.min(12,t+1); }
+
+function fFinish(why){
+  const was=fRun; fRun=false; if(fTick) clearInterval(fTick);
+  const e=((Date.now()-fStart)-fPauseMs)/1000; const cpm = e>0 ? (fOK/(e/60)) : 0; flow.lastCpm=+(isFinite(cpm)?cpm.toFixed(1):'0'); saveFlow();
+  if(was){ $('fHint').textContent = (why==='errors') ? 'Runden stoppet pga. mange feil.' : 'Runde ferdig.'; }
+  const okFlow = passedFlow(flow.currentLevel, flow.lastCpm, fBad);
+  fResults.push({t:nowClock(), lvl:flow.currentLevel + (flow.mixPending?' (mix)':''), ok:fOK, bad:fBad, dur:F_ROUND, cpm:flow.lastCpm, flyt: okFlow ? '✓' : (why==='errors'?'✗':'')});
+  renderFlowSummary(); showFlash(flow.lastCpm, why==='errors');
+
+  if(!flow.mixPending){
+    flow.streak = okFlow ? flow.streak+1 : 0;
+    if(flow.streak>=2){
+      if(!flow.mastered.includes(flow.currentLevel)) flow.mastered.push(flow.currentLevel);
+      const prev = flow.mastered.length>=2 ? flow.mastered[flow.mastered.length-2] : null;
+      flow.mixWith = prev; flow.mixPending = !!prev; flow.streak=0;
+      flow.currentLevel = nextLevel(flow.currentLevel); saveFlow();
+    }
+  }else{
+    flow.mixPending=false; saveFlow();
+  }
+
+  setTimeout(()=> startLevel(flow.currentLevel, !flow.mixPending), 900);
+}
+
+/* Flow controls & keypad */
+$('fPause').addEventListener('click',()=>{ if(!fRun) return; fPaused=!fPaused; $('fHint').textContent=fPaused?'Pauset':''; });
+$('fStop').addEventListener('click',()=>{ if(!fRun) return; fFinish('manual'); });
+
+(function buildFPad(){
+  const pad=$('fPad'); const keys=['1','2','3','4','5','6','7','8','9','0','⌫','OK'];
+  pad.innerHTML=''; keys.forEach(k=>{ const b=document.createElement('button'); b.className='key'; b.textContent=k; b.dataset.key=k; pad.appendChild(b); });
+  pad.addEventListener('click',e=>{
+    const btn=e.target.closest('.key'); if(!btn||!fRun||fPaused) return;
+    const k=btn.dataset.key; const inp=$('fAns'); if(!inp) return;
+    if(k==='OK'){ fSubmit(); return; }
+    if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); fOnType(); return; }
+    if(/\d/.test(k)){ inp.value=((inp.value||'')+k).slice(0,3); fOnType(); }
+  });
+})();
+
+/* Flow summary */
+function renderFlowSummary(){
+  $('fResBody').innerHTML = fResults.slice(-10).map(r=>`
+    <tr><td>${r.t}</td><td>${r.lvl}</td><td>${r.ok}</td><td>${r.bad}</td>
+    <td class="right">${r.dur}</td><td class="right">${(+r.cpm).toFixed(1)}</td><td>${r.flyt}</td></tr>`).join('');
+}
+$('fContinueBtn').addEventListener('click',()=> startLevel(flow.currentLevel, !flow.mixPending));
+
+/* -------- Tooltip: vis mini-lister for nivå -------- */
+function openLevelTooltip(code){
+  $('tipTitle').textContent = `Nivå ${code}`;
+  const dom = code.startsWith('A')?'add':'mul';
+  let html='';
+  if(dom==='add'){
+    const c=+code.slice(1);
+    const fams = F_ADD.filter(f=>f.c===c);
+    html += `<div class="muted">Familier (sum = ${c}):</div>`;
+    html += `<ul style="margin:6px 0 8px; padding-left:18px">` + fams.map(f=>`<li><b>${f.a}+${f.b}=${c}</b> &nbsp;•&nbsp; ${f.b}+${f.a}=${c} &nbsp;•&nbsp; ${c}-${f.a}=${f.b} &nbsp;•&nbsp; ${c}-${f.b}=${f.a}</li>`).join('') + `</ul>`;
+    html += `<div class="mini">I spillet får du alle fire fakta i tilfeldig rekkefølge.</div>`;
+  }else{
+    const t=+code.slice(1);
+    html += `<div class="muted">${t}-gangen (kjerne):</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0">` +
+      Array.from({length:12},(_,i)=>i+1).map(n=>`<div><b>${n}×${t}=${n*t}</b></div>`).join('') +
+      `</div>`;
+    html += `<div class="mini">Også motsatte delingsfakta: <b>(${t}·n=m) ⇄ (m÷${t}=n)</b>.</div>`;
+  }
+  $('tipContent').innerHTML=html;
+  $('tipBackdrop').style.display='grid';
+}
+$('tipBackdrop').addEventListener('click',e=>{ if(e.target.id==='tipBackdrop') e.currentTarget.style.display='none'; });
+$('fLevelInfo').addEventListener('click',()=> openLevelTooltip(($('fLevelCode').textContent||'').trim()));
+
+/* Init Flow root */
+(function initFlow(){
+  loadFlow(); showFlow('fHome'); updateFlowHome();
+})();
+
+/* Landing initially shown; wizard already init’d above */
+
 })();
 </script>
 </body>
 </html>
-
