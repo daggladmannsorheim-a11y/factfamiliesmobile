@@ -72,6 +72,12 @@
 
   #overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(2,6,23,.65);z-index:10;backdrop-filter:blur(2px)}
   #overlay .count{font-size:56px;font-weight:900}
+
+  /* quick round result popup */
+  #roundPopup{position:fixed;inset:0;display:none;place-items:center;z-index:20;background:rgba(0,0,0,.25)}
+  #roundPopup .box{background:#0b1223;border:1px solid #334155;border-radius:14px;padding:14px 16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  #roundPopup .title{font-weight:900;margin-bottom:4px}
+  #roundPopup .line{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -177,6 +183,14 @@
 <!-- Countdown -->
 <div id="overlay"><div class="count" id="count">3</div></div>
 
+<!-- Quick CPM popup -->
+<div id="roundPopup">
+  <div class="box">
+    <div id="rpTitle" class="title">Round result</div>
+    <div id="rpLine" class="line">CPM 0.0 (✓0, ✗0)</div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -193,6 +207,9 @@ const nowClock = ()=>{ const d=new Date(); return `${pad(d.getHours())}:${pad(d.
 const F_ADD=[]; for(let c=2;c<=20;c++){ for(let a=1;a<=Math.floor(c/2);a++){ const b=c-a; F_ADD.push({a,b,c,id:`A:${a}-${b}-${c}`}); } }
 // Mul: a<=b<=12
 const F_MUL=[]; for(let a=1;a<=12;a++){ for(let b=a;b<=12;b++){ const c=a*b; F_MUL.push({a,b,c,id:`M:${a}-${b}-${c}`}); } }
+
+const MAP_ADD = new Map(F_ADD.map(f=>[f.id,f]));
+const MAP_MUL = new Map(F_MUL.map(f=>[f.id,f]));
 
 const famItemsAdd=f=>[
   {op:'+', pattern:[f.a,f.b,f.c], fam:f.id},
@@ -216,7 +233,7 @@ let totalRounds=3, roundIdx=0;
 
 let running=false, paused=false;
 let startMs=0, pauseMs=0, pauseStart=0, tick=null;
-let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0, hintTimer=null;
+let correct=0, wrong=0, idx=0, q=[], cur=null, sol=0;
 
 const ERROR_LIMIT=3;
 const results=[];
@@ -369,6 +386,39 @@ function submit(){
   idx++; setTimeout(nextItem,70); hud();
 }
 
+/* ---------- Preview of four facts BEFORE solving ---------- */
+function previewLinesForFamily(f){
+  if(mode==='add'){
+    return [
+      `${f.a}+${f.b}=${f.c}`,
+      `${f.b}+${f.a}=${f.c}`,
+      `${f.c}-${f.a}=${f.b}`,
+      `${f.c}-${f.b}=${f.a}`
+    ];
+  }else{
+    return [
+      `${f.a}×${f.b}=${f.c}`,
+      `${f.b}×${f.a}=${f.c}`,
+      `${f.c}÷${f.a}=${f.b}`,
+      `${f.c}÷${f.b}=${f.a}`
+    ];
+  }
+}
+function showFamilyPreviewForFirstItem(){
+  if(!q.length) return;
+  const famId = q[0].fam;
+  const f = (mode==='add' ? MAP_ADD.get(famId) : MAP_MUL.get(famId));
+  if(!f) return;
+  const lines = previewLinesForFamily(f);
+  $('eq').innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+      <div style="opacity:.8;font-size:14px">Preview</div>
+      <div style="font-weight:900">${lines[0]}</div>
+      <div style="font-weight:900">${lines[1]}</div>
+      <div style="font-weight:900">${lines[2]}</div>
+      <div style="font-weight:900">${lines[3]}</div>
+    </div>`;
+}
+
 /* ---------- Round control ---------- */
 function startRoundWithCountdown(){
   $('roundIdx').textContent = String(roundIdx+1);
@@ -380,13 +430,22 @@ function startRoundWithCountdown(){
   const iv=setInterval(()=>{ t--; if(t>0){ c.textContent=t; } else { c.textContent='GO!'; setTimeout(()=>{ ov.style.display='none'; clearInterval(iv); beginRound(); },500);} },1000);
 }
 function beginRound(){
-  running=true; paused=false; correct=0; wrong=0; idx=0; q=buildQueue();
-  startMs=Date.now(); pauseMs=0; pauseStart=0;
+  // Build queue first so we can preview the first family's four facts
+  q = buildQueue();
+  if(q.length===0){ finishRound('empty'); return; }
+
+  // Show preview (no timer running yet)
+  showFamilyPreviewForFirstItem();
   $('timeBar').style.width='0%';
   $('timeLeft').textContent = fmtTime(duration);
-  $('eq').innerHTML = `<span style="font-size:18px;opacity:.9">Get ready…</span>`;
-  if(q.length===0){ finishRound('empty'); return; }
-  nextItem();
+
+  // After a short pause, start the actual timed round
+  setTimeout(startTimedRound, 1600); // quick preview window
+}
+function startTimedRound(){
+  running=true; paused=false; correct=0; wrong=0; idx=0;
+  startMs=Date.now(); pauseMs=0; pauseStart=0;
+  setEq(q[idx]); // first problem
   if(tick) clearInterval(tick);
   tick=setInterval(()=>{
     if(!running||paused) return;
@@ -406,21 +465,37 @@ function hud(){
   const prog = Math.max(0, Math.min(100, (e/duration)*100));
   $('timeBar').style.width = prog + '%';
 }
+
+/* ---------- Quick CPM popup after each round ---------- */
+function showRoundPopup(n, cpm, c, w, endedByErrors){
+  const pop = $('roundPopup');
+  $('rpTitle').textContent = `Round ${n} result`;
+  $('rpLine').textContent  = `CPM ${cpm.toFixed(1)} (✓${c}, ✗${w})` + (endedByErrors ? ' — ended by errors' : '');
+  pop.style.display = 'grid';
+  setTimeout(()=>{ pop.style.display='none'; }, 1400);
+}
+
 function finishRound(why){
+  // Stop timing
+  const wasRunning = running;
   running=false; if(tick) clearInterval(tick);
+
+  // Compute stats
   const e=elapsed();
   const used=new Set(); for(let i=0;i<idx;i++){ const it=q[i]; if(it&&it.fam) used.add(it.fam); }
   const fams=[...used].map(famLabel).join(' | ');
   const cpm = e>0? (correct/(e/60)) : 0;
 
+  // UI feedback line
   if(why==='errors'){
     $('feedback').innerHTML = `<span class="bad">Round ended due to errors (${wrong}).</span>`;
   }else if(why==='empty'){
     $('feedback').innerHTML = `<span class="bad">No families selected.</span>`;
-  }else{
+  }else if(wasRunning){
     $('feedback').innerHTML = `<span class="good">Done — CPM ${cpm.toFixed(1)}</span>`;
   }
 
+  // Save result
   results.push({
     t: nowClock(),
     mode: mode==='add'?'A/S':'M/D',
@@ -430,6 +505,10 @@ function finishRound(why){
     cpm: +(isFinite(cpm)?cpm.toFixed(1):'0'),
     why
   });
+
+  // QUICK POPUP
+  const displayRoundNumber = roundIdx + 1; // current (1-based)
+  showRoundPopup(displayRoundNumber, cpm, correct, wrong, why==='errors');
 
   // Advance or summary
   roundIdx++;
